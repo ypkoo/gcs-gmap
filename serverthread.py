@@ -42,9 +42,9 @@ def LOG(logger, msg):
 _emitterCache = weakref.WeakKeyDictionary()
 
 def emitter(ob):
-    if ob not in _emitterCache:
-        _emitterCache[ob] = QObject()
-    return _emitterCache[ob]
+	if ob not in _emitterCache:
+		_emitterCache[ob] = QObject()
+	return _emitterCache[ob]
 
 ''' Server thread class ----------------------------------------------------'''
 
@@ -399,14 +399,40 @@ class HistoryLayout(QVBoxLayout):
 class DroneStatusLayout(QVBoxLayout):
 	def __init__(self):
 		super(DroneStatusLayout, self).__init__()
-		statusLabel = QLabel('Status')
-		statusTextbox = QTextEdit()
-		statusTextbox.setReadOnly(True)
-		self.addWidget(statusLabel)
-		self.addWidget(statusTextbox)
+		self.statusLabel = QLabel('Status')
+		self.statusTextbox = QTextEdit()
+		self.statusTextbox.setReadOnly(True)
+		self.addWidget(self.statusLabel)
+		self.addWidget(self.statusTextbox)
+
+		self.timer = QTimer()
+		self.timer.timeout.connect(self.update_drone_list)
+		self.timer.start(PERIOD)
+
 
 	def update_drone_list(self, msg):
-		pass
+		global STATUS_OUTPUT, selected_drone
+		for drone in selected_drone:
+			location = drone.getLocation()
+			STATUS_OUTPUT += ('Drone %d\n- latitude: %s\n- longitude: %s\n- altitude: %s\n' % (drone.getId(), location[0], location[1], location[2]))
+
+		self.statusTextbox.clear()
+		self.statusTextbox.setText(STATUS_OUTPUT)
+		STATUS_OUTPUT = ''
+
+class GMapWebView(QWebView):
+	def __init__(self):
+		super(GMapWebView, self).__init__()
+		file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "googlemap.html"))
+		local_url = QUrl.fromLocalFile(file_path)
+		self.load(local_url)
+
+	def eval_js(self):
+		frame = self.browser.page().mainFrame()
+		lat = 36.374383
+		lng = 127.365327
+		frame.evaluateJavaScript('change_pos(%.6f, %.6f);' % (lat, lng))
+
 
 class MainFrame(QWidget):
 	def __init__(self):
@@ -415,25 +441,18 @@ class MainFrame(QWidget):
 		self.guiClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 		self.grid = QGridLayout()
-		self.browser = QWebView()
+		self.gmap = GMapWebView()
 
 		self.commandLayout = CmdLayout(1)
 		self.statusLayout = DroneStatusLayout()
 		self.historyLayout = HistoryLayout()
 
-		self.button = QPushButton('js')
-		self.grid.addWidget(self.browser, 1, 0, 2, 1)
+		self.grid.addWidget(self.gmap, 1, 0, 2, 1)
 		self.grid.addLayout(self.historyLayout, 3, 0)
 		self.grid.addLayout(self.statusLayout, 1, 1)
 		self.grid.addLayout(self.commandLayout, 2, 1)
-		self.grid.addWidget(self.button, 3, 1)
 
-		self.button.clicked.connect(self.eval_js)
 		self.setLayout(self.grid)
-
-		file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "googlemap.html"))
-		local_url = QUrl.fromLocalFile(file_path)
-		self.browser.load(local_url)
 
 		try:
 			self.server = ServerThread()
@@ -455,7 +474,7 @@ class MainFrame(QWidget):
 		# timer to generate status-report request periodically
 		self.timer = QTimer()
 		self.timer.timeout.connect(self.timeout)
-		self.timer.start(1000)
+		self.timer.start(PERIOD)
 
 	def timeout(self):
 		message = "gui timer"
@@ -464,12 +483,6 @@ class MainFrame(QWidget):
 			self.guiClient.send(message + '\t')
 		except Exception, e:
 			LOG('GUI Frame', repr(e))
-
-	def eval_js(self):
-		frame = self.browser.page().mainFrame()
-		lat = 36.374383
-		lng = 127.365327
-		frame.evaluateJavaScript('change_pos(%.6f, %.6f);' % (lat, lng))
 
 		
 
