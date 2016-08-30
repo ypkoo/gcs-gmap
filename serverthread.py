@@ -4,7 +4,7 @@ from PyQt4.QtGui import QApplication
 # from PyQt4.QtCore import QUrl, QTimer, QObject, pyqtSignal
 from PyQt4.QtCore import *
 from PyQt4.QtWebKit import QWebView, QWebPage
-from PyQt4.QtGui import QComboBox, QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout, QGridLayout, QLineEdit, QWidget, QHeaderView, QPushButton, QTextEdit, QLabel
+from PyQt4.QtGui import QDialog, QComboBox, QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout, QGridLayout, QLineEdit, QWidget, QHeaderView, QPushButton, QTextEdit, QLabel
 from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest
 
 import select
@@ -316,6 +316,72 @@ class Drone:
 
 
 """ Customized GUI classes """
+class RelocDialog(QDialog):
+	def __init__(self, sock):
+		super(RelocDialog, self).__init__()
+
+		self.sock = sock
+
+		relocLayout = QGridLayout()
+		labelX = QLabel('X')
+		labelY = QLabel('Y')
+		labelZ = QLabel('Z')
+		labelDrone = QLabel('Drone')
+		self.relocX = QLineEdit()
+		self.relocY = QLineEdit()
+		self.relocZ = QLineEdit()
+		self.droneListCombo = QComboBox()
+		okBtn = QPushButton('OK')
+
+		self.droneListCombo.addItem('hello')
+		self.droneListCombo.addItem('hello')
+		self.droneListCombo.addItem('hello')
+
+		for drone in drone_list:
+			droneListCombo.addItem(str(drone.getId()))
+
+		relocLayout.addWidget(labelX, 1, 0)
+		relocLayout.addWidget(self.relocX, 1, 1)
+		relocLayout.addWidget(labelY, 2, 0)
+		relocLayout.addWidget(self.relocY, 2, 1)
+		relocLayout.addWidget(labelZ, 3, 0)
+		relocLayout.addWidget(self.relocZ, 3, 1)
+		relocLayout.addWidget(labelDrone, 4, 0)
+		relocLayout.addWidget(self.droneListCombo, 4, 1)
+		relocLayout.addWidget(okBtn, 5, 0, 1, 2)
+
+		okBtn.clicked.connect(self.on_ok)
+
+
+		self.setLayout(relocLayout)
+
+	def on_ok(self):
+		droneID = self.droneListCombo.currentText()
+
+		# for drone_in_list in drone_list:
+		# 	if drone_in_list.getId() == int(droneID):
+		# 		break
+		# else:
+		# 	return
+
+		x = self.relocX.text()
+		y = self.relocY.text()
+		z = self.relocZ.text()
+
+		message = ('gui relocation %s %s %s %s' % (droneID, x, y, z))
+		LOG('Relocation', 'send a message to the socket server thread: ' + message)
+
+		try:
+			self.sock.send(message + '\t')
+		except Exception, e:
+			LOG('Relocation', repr(e))
+			self.sock.shutdown(socket.SHUT_RDWR)
+			connection_list.remove(self.sock)
+			self.__del__()
+		self.close()
+
+
+
 
 class CmdLayout(QVBoxLayout):
 	def __init__(self, sock):
@@ -326,25 +392,6 @@ class CmdLayout(QVBoxLayout):
 		launchBtn = QPushButton('Launch')
 		relocBtn = QPushButton('Relocation')
 		landBtn = QPushButton('Land')
-		relocLayout = QHBoxLayout()
-		labelX = QLabel('X')
-		labelY = QLabel('Y')
-		labelZ = QLabel('Z')
-		relocX = QLineEdit()
-		relocY = QLineEdit()
-		relocZ = QLineEdit()
-		droneListCombo = QComboBox()
-
-		droneListCombo.addItem('hello')
-		droneListCombo.addItem('hello')
-		droneListCombo.addItem('hello')
-
-		relocLayout.addWidget(labelX)
-		relocLayout.addWidget(relocX)
-		relocLayout.addWidget(labelY)
-		relocLayout.addWidget(relocY)
-		relocLayout.addWidget(labelZ)
-		relocLayout.addWidget(relocZ)
 
 		launchLandLayout = QHBoxLayout()
 		launchLandLayout.addWidget(launchBtn)
@@ -352,35 +399,36 @@ class CmdLayout(QVBoxLayout):
 
 		self.addWidget(commandLabel)
 		self.addLayout(launchLandLayout)
-		self.addWidget(droneListCombo)
-		self.addLayout(relocLayout)
 		self.addWidget(relocBtn)
 		
 
 		launchBtn.clicked.connect(self.on_launch)
-		landBtn.clicked.connect(self.on_relocation)
-		relocBtn.clicked.connect(self.on_landing)
+		landBtn.clicked.connect(self.on_landing)
+		relocBtn.clicked.connect(self.on_relocation)
 
 	def update_drone_list(self):
 		pass
 
 	def on_launch(self, event):
-			LOG('Command', 'button event - launch')
-			message = 'gui launch'
-			LOG('Launch', 'send a message to the socket server thread: ' + message)
-			try:
-				self.sock.send(message + '\t')
-			except Exception, e:
-				LOG('Launch', repr(e))
-				self.sock.shutdown(socket.SHUT_RDWR)
-				connection_list.remove(self.sock)
-				self.__del__()
+		LOG('Command', 'button event - launch')
+		message = 'gui launch'
+		LOG('Launch', 'send a message to the socket server thread: ' + message)
+		try:
+			self.sock.send(message + '\t')
+		except Exception, e:
+			LOG('Launch', repr(e))
+			self.sock.shutdown(socket.SHUT_RDWR)
+			connection_list.remove(self.sock)
+			self.__del__()
 
 	def on_relocation(self):
-		pass
+		print 'hello!!!'
+		relocDialog = RelocDialog(self.sock)
+		relocDialog.exec_()
 
 	def on_landing(self):
-		pass
+		print 'hello!'
+		self.emit(SIGNAL("updateHistory"), 'hello')
 
 class HistoryLayout(QVBoxLayout):
 	def __init__(self):
@@ -391,9 +439,10 @@ class HistoryLayout(QVBoxLayout):
 		self.addWidget(historyLabel)
 		self.addWidget(historyTextbox)
 
-		self.connect(self, SIGNAL("updateHistory(QString&)"), self.update_history_display)
+		self.connect(self, SIGNAL("updateHistory"), self.update_history_display)
 
 	def update_history_display(self, msg):
+		print 'update!'
 		self.historyTextbox.appendText(str(ctime()) + ' ' + str(msg.data) + '\n')
 
 class DroneStatusLayout(QVBoxLayout):
@@ -410,7 +459,7 @@ class DroneStatusLayout(QVBoxLayout):
 		self.timer.start(PERIOD)
 
 
-	def update_drone_list(self, msg):
+	def update_drone_list(self):
 		global STATUS_OUTPUT, selected_drone
 		for drone in selected_drone:
 			location = drone.getLocation()
@@ -428,11 +477,10 @@ class GMapWebView(QWebView):
 		self.load(local_url)
 
 	def eval_js(self):
-		frame = self.browser.page().mainFrame()
+		frame = self.page().mainFrame()
 		lat = 36.374383
 		lng = 127.365327
 		frame.evaluateJavaScript('change_pos(%.6f, %.6f);' % (lat, lng))
-
 
 class MainFrame(QWidget):
 	def __init__(self):
@@ -443,7 +491,7 @@ class MainFrame(QWidget):
 		self.grid = QGridLayout()
 		self.gmap = GMapWebView()
 
-		self.commandLayout = CmdLayout(1)
+		self.commandLayout = CmdLayout(self.guiClient)
 		self.statusLayout = DroneStatusLayout()
 		self.historyLayout = HistoryLayout()
 
