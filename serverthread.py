@@ -38,7 +38,13 @@ dcHeight=0
 def LOG(logger, msg):
 	print str(ctime()) + ' [' + logger + '] ' + msg
 
+# Emitter hack for emitting from non-QObject
 _emitterCache = weakref.WeakKeyDictionary()
+
+def emitter(ob):
+    if ob not in _emitterCache:
+        _emitterCache[ob] = QObject()
+    return _emitterCache[ob]
 
 ''' Server thread class ----------------------------------------------------'''
 
@@ -129,14 +135,12 @@ class ServerThread(Thread):
 
 								output = ('Drone %d: connection closed' % droneID)
 								LOG('Server', output)
-								# wx.CallAfter(Publisher().sendMessage, "updateHistory", output)
-								QObject.emit(SIGNAL("updateHistory"), output)
+								QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
 
 							else:
 								output = ('GUI-server connection closed')
 								LOG('Server', output)
-								# wx.CallAfter(Publisher().sendMessage, "updateHistory", output)
-								QObject.emit(SIGNAL("updateHistory"), output)
+								QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
 
 							connection_list.remove(sock)
 							sock.close()
@@ -170,8 +174,7 @@ class ServerThread(Thread):
 					drone_in_list.__del__()
 			output = 'broadcast status report request to every drone'
 			LOG('Server', output)
-			# wx.CallAfter(Publisher().sendMessage, "updateHistory", output)
-			QObject.emit(SIGNAL("updateHistory"), output)
+			QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
 
 	def guiLaunchHandler(self):
 		LOG('Server', 'Launch message')
@@ -192,8 +195,7 @@ class ServerThread(Thread):
 
 		output = ('Drone launch')
 		LOG('Server', output)
-		# wx.CallAfter(Publisher().sendMessage, "updateHistory", output)
-		QObject.emit(SIGNAL("updateHistory"), output)
+		QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
 
 	def guiLandingHandler(self):
 		LOG('Server', 'Landing message')
@@ -214,8 +216,7 @@ class ServerThread(Thread):
 
 		output = ('Drone landing')
 		LOG('Server', output)
-		# wx.CallAfter(Publisher().sendMessage, "updateHistory", output)
-		QObject.emit(SIGNAL("updateHistory"), output)
+		QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
 	
 
 	def guiRelocationHandler(self, msg):
@@ -247,15 +248,13 @@ class ServerThread(Thread):
 
 		output = ('Drone relocation: drone %s (%s, %s, %s)' % (droneID, x, y, z))
 		LOG('Server', output)
-		# wx.CallAfter(Publisher().sendMessage, "updateHistory", output)
-		QObject.emit(SIGNAL("updateHistory"), output)
+		QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
 		
 
 	def guiFrameHandler(self):
 		output = ('GUI-server initialization complete')
 		LOG('Server', output)
-		# wx.CallAfter(Publisher().sendMessage, "updateHistory", output)
-		QObject.emit(SIGNAL("updateHistory"), output)
+		QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
 		
 	def droneNewHandler(self, sock, msg):
 		if msg[2] not in MAC_list:
@@ -266,8 +265,7 @@ class ServerThread(Thread):
 
 		output = ('Drone %d: connected' % droneID)
 		LOG('Server', output)
-		# wx.CallAfter(Publisher().sendMessage, "updateHistory", output)
-		QObject.emit(SIGNAL("updateHistory"), output)
+		QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
 
 	def droneStatusHandler(self, sock, msg):
 		for drone_in_list in drone_list:
@@ -289,8 +287,7 @@ class ServerThread(Thread):
 		else:
 			output = ('Drone %d (%s, %s, %s) has %d neighbors' % (droneID, msg[2], msg[3], msg[4], len(drone_in_list.neighborList)))
 		LOG('Server', output)
-		# wx.CallAfter(Publisher().sendMessage, "updateHistory", output)
-		QObject.emit(SIGNAL("updateHistory"), output)
+		QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
 
 class Drone:
 	def __init__(self, socket = -1, id = -1):
