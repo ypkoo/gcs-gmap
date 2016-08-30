@@ -49,7 +49,7 @@ def emitter(ob):
 ''' Server thread class ----------------------------------------------------'''
 
 class ServerThread(Thread):
-	def __init__(self):
+	def __init__(self, signal):
 		Thread.__init__(self)
 		try:
 			LOG('Server', 'create socket')
@@ -62,6 +62,8 @@ class ServerThread(Thread):
 		except Exception, e:
 			LOG('Server', repr(e))
 			raise ValueError(repr(e))
+
+		self.signal = signal
 
 	def run(self):
 		connection_list = [self.socket]
@@ -135,12 +137,12 @@ class ServerThread(Thread):
 
 								output = ('Drone %d: connection closed' % droneID)
 								LOG('Server', output)
-								QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
+								self.signal.emit(output)
 
 							else:
 								output = ('GUI-server connection closed')
 								LOG('Server', output)
-								QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
+								self.signal.emit(output)
 
 							connection_list.remove(sock)
 							sock.close()
@@ -174,7 +176,7 @@ class ServerThread(Thread):
 					drone_in_list.__del__()
 			output = 'broadcast status report request to every drone'
 			LOG('Server', output)
-			QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
+			self.signal.emit(output)
 
 	def guiLaunchHandler(self):
 		LOG('Server', 'Launch message')
@@ -195,7 +197,7 @@ class ServerThread(Thread):
 
 		output = ('Drone launch')
 		LOG('Server', output)
-		QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
+		self.signal.emit(output)
 
 	def guiLandingHandler(self):
 		LOG('Server', 'Landing message')
@@ -216,7 +218,7 @@ class ServerThread(Thread):
 
 		output = ('Drone landing')
 		LOG('Server', output)
-		QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
+		self.signal.emit(output)
 	
 
 	def guiRelocationHandler(self, msg):
@@ -248,13 +250,13 @@ class ServerThread(Thread):
 
 		output = ('Drone relocation: drone %s (%s, %s, %s)' % (droneID, x, y, z))
 		LOG('Server', output)
-		QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
+		self.signal.emit(output)
 		
 
 	def guiFrameHandler(self):
 		output = ('GUI-server initialization complete')
 		LOG('Server', output)
-		QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
+		self.signal.emit(output)
 		
 	def droneNewHandler(self, sock, msg):
 		if msg[2] not in MAC_list:
@@ -265,7 +267,7 @@ class ServerThread(Thread):
 
 		output = ('Drone %d: connected' % droneID)
 		LOG('Server', output)
-		QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
+		self.signal.emit(output)
 
 	def droneStatusHandler(self, sock, msg):
 		for drone_in_list in drone_list:
@@ -287,7 +289,7 @@ class ServerThread(Thread):
 		else:
 			output = ('Drone %d (%s, %s, %s) has %d neighbors' % (droneID, msg[2], msg[3], msg[4], len(drone_in_list.neighborList)))
 		LOG('Server', output)
-		QObject.emit(emitter(self), SIGNAL("updateHistory"), output)
+		self.signal.emit(output)
 
 class Drone:
 	def __init__(self, socket = -1, id = -1):
@@ -384,9 +386,10 @@ class RelocDialog(QDialog):
 
 
 class CmdLayout(QVBoxLayout):
-	def __init__(self, sock):
+	def __init__(self, sock, signal):
 		super(CmdLayout, self).__init__()
 		self.sock = sock
+		self.signal = signal
 
 		commandLabel = QLabel('Command')
 		launchBtn = QPushButton('Launch')
@@ -428,22 +431,27 @@ class CmdLayout(QVBoxLayout):
 
 	def on_landing(self):
 		print 'hello!'
-		self.emit(SIGNAL("updateHistory"), 'hello')
+		self.signal.emit('hello')
 
 class HistoryLayout(QVBoxLayout):
+
+	historySignal = pyqtSignal(str)
+
 	def __init__(self):
 		super(HistoryLayout, self).__init__()
 		historyLabel = QLabel('history')
-		historyTextbox = QTextEdit()
-		historyTextbox.setReadOnly(True)
+		self.historyTextbox = QTextEdit()
+		self.historyTextbox.setReadOnly(True)
 		self.addWidget(historyLabel)
-		self.addWidget(historyTextbox)
+		self.addWidget(self.historyTextbox)
 
-		self.connect(self, SIGNAL("updateHistory"), self.update_history_display)
+		self.historySignal.connect(self.update_history_display)
 
 	def update_history_display(self, msg):
-		print 'update!'
-		self.historyTextbox.appendText(str(ctime()) + ' ' + str(msg.data) + '\n')
+		self.historyTextbox.append(str(ctime()) + ' ' + msg + '\n')
+
+	def get_signal(self):
+		return self.historySignal
 
 class DroneStatusLayout(QVBoxLayout):
 	def __init__(self):
@@ -476,11 +484,18 @@ class GMapWebView(QWebView):
 		local_url = QUrl.fromLocalFile(file_path)
 		self.load(local_url)
 
+		self.timer = QTimer()
+		self.timer.timeout.connect(self.update_gmap)
+		self.timer.start(PERIOD)
+
 	def eval_js(self):
 		frame = self.page().mainFrame()
 		lat = 36.374383
 		lng = 127.365327
 		frame.evaluateJavaScript('change_pos(%.6f, %.6f);' % (lat, lng))
+
+	def update_gmap(self):
+		pass
 
 class MainFrame(QWidget):
 	def __init__(self):
@@ -491,9 +506,10 @@ class MainFrame(QWidget):
 		self.grid = QGridLayout()
 		self.gmap = GMapWebView()
 
-		self.commandLayout = CmdLayout(self.guiClient)
+		
 		self.statusLayout = DroneStatusLayout()
 		self.historyLayout = HistoryLayout()
+		self.commandLayout = CmdLayout(self.guiClient, self.historyLayout.get_signal())
 
 		self.grid.addWidget(self.gmap, 1, 0, 2, 1)
 		self.grid.addLayout(self.historyLayout, 3, 0)
@@ -503,7 +519,7 @@ class MainFrame(QWidget):
 		self.setLayout(self.grid)
 
 		try:
-			self.server = ServerThread()
+			self.server = ServerThread(self.historyLayout.get_signal())
 		except ValueError as e:
 			LOG('GUI Frame', repr(e))
 			sys.exit()
