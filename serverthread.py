@@ -1,7 +1,7 @@
 import sys, os
 
-from PyQt4.QtGui import QApplication, QTableWidget, QTableWidgetItem
-from PyQt4.QtCore import QUrl
+from PyQt4.QtGui import QApplication
+from PyQt4.QtCore import QUrl, QTimer
 from PyQt4.QtWebKit import QWebView, QWebPage
 from PyQt4.QtGui import QComboBox, QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout, QGridLayout, QLineEdit, QWidget, QHeaderView, QPushButton, QTextEdit, QLabel
 from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest
@@ -308,9 +308,6 @@ class Drone:
 
 """ Customized GUI classes """
 
-class RelocationDialog():
-	pass
-
 class CmdLayout(QVBoxLayout):
 	def __init__(self, sock):
 		super(CmdLayout, self).__init__()
@@ -327,6 +324,11 @@ class CmdLayout(QVBoxLayout):
 		relocX = QLineEdit()
 		relocY = QLineEdit()
 		relocZ = QLineEdit()
+		droneListCombo = QComboBox()
+
+		droneListCombo.addItem('hello')
+		droneListCombo.addItem('hello')
+		droneListCombo.addItem('hello')
 
 		relocLayout.addWidget(labelX)
 		relocLayout.addWidget(relocX)
@@ -341,8 +343,10 @@ class CmdLayout(QVBoxLayout):
 
 		self.addWidget(commandLabel)
 		self.addLayout(launchLandLayout)
+		self.addWidget(droneListCombo)
 		self.addLayout(relocLayout)
 		self.addWidget(relocBtn)
+		
 
 		launchBtn.clicked.connect(self.on_launch)
 		landBtn.clicked.connect(self.on_relocation)
@@ -434,6 +438,18 @@ class MainFrame(QWidget):
 			LOG('GUI Frame', repr(e))
 			sys.exit()
 
+		# timer to generate status-report request periodically
+		self.timer = QTimer()
+		self.timer.timeout.connect(self.timeout)
+		self.timer.start(1000)
+
+	def timeout(self):
+		message = "gui timer"
+		LOG('GUI Frame', 'timer event - send a message to the socket server thread: ' + message)
+		try:
+			self.guiClient.send(message + '\t')
+		except Exception, e:
+			LOG('GUI Frame', repr(e))
 
 	def eval_js(self):
 		frame = self.browser.page().mainFrame()
