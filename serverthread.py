@@ -384,7 +384,6 @@ class RelocDialog(QDialog):
 
 
 
-
 class CmdLayout(QVBoxLayout):
 	def __init__(self, sock, signal):
 		super(CmdLayout, self).__init__()
@@ -478,6 +477,7 @@ class DroneStatusLayout(QVBoxLayout):
 		STATUS_OUTPUT = ''
 
 class GMapWebView(QWebView):
+
 	def __init__(self):
 		super(GMapWebView, self).__init__()
 		file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "googlemap.html"))
@@ -488,14 +488,17 @@ class GMapWebView(QWebView):
 		self.timer.timeout.connect(self.update_gmap)
 		self.timer.start(PERIOD)
 
-	def eval_js(self):
-		frame = self.page().mainFrame()
-		lat = 36.374383
-		lng = 127.365327
-		frame.evaluateJavaScript('change_pos(%.6f, %.6f);' % (lat, lng))
-
 	def update_gmap(self):
-		pass
+		print '		gmap update!'
+		for drone in drone_list:
+			droneID = drone.getId()
+			location = drone.getLocation()
+			move_marker(droneID, location[0], location[1])
+
+	def move_marker(self, droneID, lat, lng):
+		frame = self.page().mainFrame()
+		frame.evaluateJavaScript('change_pos(%s, %s, %s);' % (droneID, lat, lng))
+
 
 class MainFrame(QWidget):
 	def __init__(self):
@@ -506,7 +509,6 @@ class MainFrame(QWidget):
 		self.grid = QGridLayout()
 		self.gmap = GMapWebView()
 
-		
 		self.statusLayout = DroneStatusLayout()
 		self.historyLayout = HistoryLayout()
 		self.commandLayout = CmdLayout(self.guiClient, self.historyLayout.get_signal())
