@@ -504,6 +504,7 @@ class MainFrame(QWidget):
 	def __init__(self):
 		super(MainFrame, self).__init__()
 		# a socket to send message from GUI frame to the socket server
+		self.setWindowTitle('Ground Control Station')
 		self.guiClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 		self.grid = QGridLayout()
@@ -551,8 +552,6 @@ class MainFrame(QWidget):
 			LOG('GUI Frame', repr(e))
 
 		
-
-
 if __name__ == '__main__':
 	app = QApplication(sys.argv)
 	frame = MainFrame()

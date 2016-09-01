@@ -43,7 +43,7 @@ function initMap() {
 function change_pos(id, lat, lng) {
 	// existing drone
 	for(var i=0; i<markerList.length; i++) {
-		if (id == markerList[i].id) {
+		if (markerList[i] != null && id == markerList[i].id) {
 			markerList[i].marker.setPosition({lat: lat, lng: lng});
 			return;
 		}
