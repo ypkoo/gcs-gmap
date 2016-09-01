@@ -16,7 +16,7 @@ import sys
 
 ''' Global variables -------------------------------------------------------'''
 
-HOST    = '127.0.0.1'
+HOST    = '10.10.0.100'
 PORT    = 56789
 ADDR    = (HOST, PORT)
 BUFSIZE = 1024
@@ -339,8 +339,10 @@ class RelocDialog(QDialog):
 		self.droneListCombo.addItem('hello')
 		self.droneListCombo.addItem('hello')
 
+		global drone_list
 		for drone in drone_list:
-			droneListCombo.addItem(str(drone.getId()))
+			self.droneListCombo.addItem(str(drone.getId()))
+			print drone.getId()
 
 		relocLayout.addWidget(labelX, 1, 0)
 		relocLayout.addWidget(self.relocX, 1, 1)
@@ -358,13 +360,14 @@ class RelocDialog(QDialog):
 		self.setLayout(relocLayout)
 
 	def on_ok(self):
+		global drone_list
 		droneID = self.droneListCombo.currentText()
 
-		# for drone_in_list in drone_list:
-		# 	if drone_in_list.getId() == int(droneID):
-		# 		break
-		# else:
-		# 	return
+		for drone_in_list in drone_list:
+			if drone_in_list.getId() == int(droneID):
+				break
+		else:
+			return
 
 		x = self.relocX.text()
 		y = self.relocY.text()
@@ -489,11 +492,13 @@ class GMapWebView(QWebView):
 		self.timer.start(PERIOD)
 
 	def update_gmap(self):
-		print '		gmap update!'
+		global drone_list
+		# print '		gmap update!'
+		LOG('GUI', 'update gmap')
 		for drone in drone_list:
 			droneID = drone.getId()
 			location = drone.getLocation()
-			move_marker(droneID, location[0], location[1])
+			self.move_marker(droneID, location[0], location[1])
 
 	def move_marker(self, droneID, lat, lng):
 		frame = self.page().mainFrame()

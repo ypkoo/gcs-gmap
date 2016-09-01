@@ -28,16 +28,16 @@ function initMap() {
 	var infowindow = new google.maps.InfoWindow({
 		content: text
 	});
-	marker = new google.maps.Marker({
-		position: startLatLng,
-		map: map,
-		title: 'Hello World!',
-		label: '1',
-		// icon: image
-	});
-	marker.addListener('click', function() {
-		infowindow.open(map, marker);
-	});
+	// marker = new google.maps.Marker({
+	// 	position: startLatLng,
+	// 	map: map,
+	// 	title: 'Hello World!',
+	// 	label: '1',
+	// 	// icon: image
+	// });
+	// marker.addListener('click', function() {
+	// 	infowindow.open(map, marker);
+	// });
 }
 
 function change_pos(id, lat, lng) {
@@ -52,8 +52,10 @@ function change_pos(id, lat, lng) {
 	// new drone
 	var marker = new google.maps.Makrer({
 		position: {lat: lat, lng: lng},
-		map: map,
+		map: map
 	});
+
+	alert('new drone!');
 
 	markerList.push({id: id, marker: marker});
 }
