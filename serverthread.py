@@ -349,10 +349,6 @@ class RelocDialog(QDialog):
 		self.droneListCombo = QComboBox()
 		okBtn = QPushButton('OK')
 
-		self.droneListCombo.addItem('hello')
-		self.droneListCombo.addItem('hello')
-		self.droneListCombo.addItem('hello')
-
 		global drone_list
 		for drone in drone_list:
 			self.droneListCombo.addItem(str(drone.getId()))

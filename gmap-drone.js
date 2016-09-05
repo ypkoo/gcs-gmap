@@ -36,6 +36,7 @@ function change_pos(id, lat, lng) {
 	// existing drone
 	for(var i=0; i<idx; i++) {
 		if (droneList[i] != null && id == droneList[i].id) {
+			alert(id);
 			droneList[i].marker.setPosition({lat: lat, lng: lng});
 			return;
 		}
