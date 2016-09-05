@@ -16,7 +16,7 @@ import sys
 
 ''' Global variables -------------------------------------------------------'''
 
-HOST    = '10.10.0.100'
+HOST    = '127.0.0.1'
 PORT    = 56789
 ADDR    = (HOST, PORT)
 BUFSIZE = 1024
@@ -506,6 +506,9 @@ class GMapWebView(QWebView):
 		global drone_list
 		# print '		gmap update!'
 		LOG('GUI', 'update gmap')
+
+		self.remove_all_markers()
+
 		for drone in drone_list:
 			droneID = drone.getId()
 			location = drone.getLocation()
@@ -523,6 +526,14 @@ class GMapWebView(QWebView):
 	def move_marker(self, droneID, location):
 		frame = self.page().mainFrame()
 		frame.evaluateJavaScript('change_pos(%s, %s, %s);' % (droneID, location[0], location[1]))
+
+	def remove_marker(self, droneID):
+		frame = self.page().mainFrame()
+		frame.evaluateJavaScript('remove_marker(%s);' % (droneID))
+
+	def remove_all_markers(self):
+		frame = self.page().mainFrame()
+		frame.evaluateJavaScript('remove_all_markers();')
 
 	def draw_line(self, start, end):
 		frame = self.page().mainFrame()

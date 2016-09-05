@@ -11,14 +11,13 @@ var lineSymbol = {
 
 var contentString = 'test string';
 var infoWindow = new google.maps.InfoWindow({
-	content: null
+    content: contentString
 });
 
 function struct_drone() {
 	var marker = '';
 	var id = '';
 }
-
 
 function initMap() {
 	map = new google.maps.Map(document.getElementById('map'), {
@@ -27,7 +26,19 @@ function initMap() {
 		mapTypeId: google.maps.MapTypeId.HYBRID
 	});
 
-	var image = 'images/drone.png';
+	// var image = 'images/drone.png';
+
+	map.addListener('click', map_clicked);
+
+	//test marker
+	var marker = new google.maps.Marker({
+		position: startLatLng,
+		map: map
+	});
+}
+
+function map_clicked(event) {
+	return;
 }
 
 function change_pos(id, lat, lng) {
@@ -47,14 +58,32 @@ function change_pos(id, lat, lng) {
 		map: map
 	});
 
+	var infoWindow = new google.maps.InfoWindow({
+	    content: ""
+	});
+
 	marker.addListener('click', function() {
-		infoWindow.setContent(contentString);
+		infoString = info_string(id);
+		infoWindow.setContent(infoString);
 		infoWindow.open(map, marker);
 	});
 
 	droneList[idx] = new struct_drone();
 	droneList[idx].marker = marker;
 	droneList[idx].id = id;
+}
+
+function info_string(id) {
+	for(var i=0; i<idx; i++) {
+		if (id == droneList[i].id) {
+			drone = droneList[i];
+			break;
+		}
+	}
+
+	if (drone == undefined) {
+		return null;
+	}
 }
 
 function remove_marker(id) {
@@ -65,6 +94,14 @@ function remove_marker(id) {
 			break;
 		}
 	}
+}
+
+function remove_all_markers() {
+	for (var i=0; i<droneList; i++) {
+		droneList[i].marker.setMap(null);
+	}
+
+	markerList = [];
 }
 
 function draw_line(startLat, startLng, endLat, endLng) {
@@ -81,7 +118,7 @@ function draw_line(startLat, startLng, endLat, endLng) {
 }
 
 function remove_all_lines() {
-	for (var i=0; i<line.length; i++) {
+	for (var i=0; i<lineList.length; i++) {
 		lineList[i].setMap(null);
 	}
 
