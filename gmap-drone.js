@@ -2,7 +2,23 @@ var map;
 var startLatLng = {lat: 36.374092, lng: 127.365638}
 var startLatLng2 = {lat: 36.374383, lng: 127.365327}
 var marker;
-var markerList = new Array(10)
+var droneList = []
+var lineList = []
+
+var lineSymbol = {
+	path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW
+};
+
+var contentString = 'test string';
+var infoWindow = new google.maps.InfoWindow({
+	content: null
+});
+
+function struct_drone(marker, id) {
+	var marker = marker;
+	var id = id;
+}
+
 
 function initMap() {
 	map = new google.maps.Map(document.getElementById('map'), {
@@ -12,47 +28,61 @@ function initMap() {
 	});
 
 	var image = 'images/drone.png';
-	var text = "this is a sample text."
-	var infowindow = new google.maps.InfoWindow({
-		content: text
-	});
-	// marker = new google.maps.Marker({
-	// 	position: startLatLng,
-	// 	map: map,
-	// 	title: 'Hello World!',
-	// 	label: '1',
-	// 	// icon: image
-	// });
-	// marker.addListener('click', function() {
-	// 	infowindow.open(map, marker);
-	// });
 }
 
 function change_pos(id, lat, lng) {
+	var idx = droneList.length;
+
 	// existing drone
-	for(var i=0; i<markerList.length; i++) {
-		if (markerList[i] != null && id == markerList[i].id) {
-			markerList[i].marker.setPosition({lat: lat, lng: lng});
+	for(var i=0; i<idx; i++) {
+		if (droneList[i] != null && id == droneList[i].id) {
+			droneList[i].marker.setPosition({lat: lat, lng: lng});
 			return;
 		}
 	}
 
 	// new drone
-	var marker = new google.maps.Makrer({
+	var marker = new google.maps.Marker({
 		position: {lat: lat, lng: lng},
 		map: map
 	});
 
-	alert('new drone!');
+	marker.addListener('click', function() {
+		infoWindow.setContent(contentString);
+		infoWindow.open(map, marker);
+	});
 
-	markerList.push({id: id, marker: marker});
+	var new_drone = new struct_drone(marker, id);
+	droneList.push(new_drone);
 }
 
 function remove_marker(id) {
-	for(var i=0; i<markerList.length; i++) {
-		if (id == markerList[i].id) {
-			markerList[i] = null;
+	for(var i=0; i<droneList.length; i++) {
+		if (id == droneList[i].id) {
+			droneList.marker.setMap(null);
+			droneList[i] = null;
 			break;
 		}
 	}
+}
+
+function draw_line(startLat, startLng, endLat, endLng) {
+	var line = new google.maps.Polyline({
+	path: [{lat: startLat, lng: startLng}, {lat: endLat, lng: endLng}],
+	icons: [{
+		icon: lineSymbol,
+		offset: '100%'
+	}],
+	map: map
+	});
+
+	lineList.push(line);
+}
+
+function remove_all_lines() {
+	for (var i=0; i<line.length; i++) {
+		lineList[i].setMap(null);
+	}
+
+	lineList = [];
 }

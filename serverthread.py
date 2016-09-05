@@ -46,6 +46,16 @@ def emitter(ob):
 		_emitterCache[ob] = QObject()
 	return _emitterCache[ob]
 
+def drone_by_mac(mac):
+	for drone in drone_list:
+		if drone.getMAC() == mac:
+			return drone
+
+def drone_by_id(id_):
+	for drone in drone_list:
+		if drone.getId() == id_:
+			return drone
+
 ''' Server thread class ----------------------------------------------------'''
 
 class ServerThread(Thread):
@@ -479,11 +489,12 @@ class DroneStatusLayout(QVBoxLayout):
 		self.statusTextbox.setText(STATUS_OUTPUT)
 		STATUS_OUTPUT = ''
 
+
 class GMapWebView(QWebView):
 
 	def __init__(self):
 		super(GMapWebView, self).__init__()
-		file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "googlemap.html"))
+		file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "gmap-drone.html"))
 		local_url = QUrl.fromLocalFile(file_path)
 		self.load(local_url)
 
@@ -498,11 +509,28 @@ class GMapWebView(QWebView):
 		for drone in drone_list:
 			droneID = drone.getId()
 			location = drone.getLocation()
-			self.move_marker(droneID, location[0], location[1])
+			self.move_marker(droneID, location)
 
-	def move_marker(self, droneID, lat, lng):
+		for drone in drone_list:
+			self.remove_all_lines()
+			for neighbor in drone.neighborList:
+				nbrDrone = drone_by_mac(neighbor)
+				self.draw_line(drone.getLocation(), nbrDrone.getLocation())
+
+
+	def move_marker(self, droneID, location):
 		frame = self.page().mainFrame()
-		frame.evaluateJavaScript('change_pos(%s, %s, %s);' % (droneID, lat, lng))
+		frame.evaluateJavaScript('change_pos(%s, %s, %s);' % (droneID, location[0], location[1]))
+
+	def draw_line(start, end):
+		frame = self.page().mainFrame()
+		frame.evaluateJavaScript('draw_line(%s, %s, %s, %s);' % (start[0], start[1], end[0], end[1]))
+
+	def remove_all_lines():
+		frame = self.page().mainFrame()
+		frame.evaluateJavaScript('remove_all_lines();')
+
+
 
 
 class MainFrame(QWidget):
