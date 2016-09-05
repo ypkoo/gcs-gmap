@@ -16,7 +16,7 @@ import sys
 
 ''' Global variables -------------------------------------------------------'''
 
-HOST    = '127.0.0.1'
+HOST    = '10.10.0.100'
 PORT    = 56789
 ADDR    = (HOST, PORT)
 BUFSIZE = 1024
@@ -51,10 +51,14 @@ def drone_by_mac(mac):
 		if drone.getMAC() == mac:
 			return drone
 
+	return None
+
 def drone_by_id(id_):
 	for drone in drone_list:
 		if drone.getId() == id_:
 			return drone
+
+	return None
 
 ''' Server thread class ----------------------------------------------------'''
 
@@ -515,18 +519,20 @@ class GMapWebView(QWebView):
 			self.remove_all_lines()
 			for neighbor in drone.neighborList:
 				nbrDrone = drone_by_mac(neighbor)
-				self.draw_line(drone.getLocation(), nbrDrone.getLocation())
+
+				if nbrDrone != None:
+					self.draw_line(nbrDrone.getLocation(), nbrDrone.getLocation())
 
 
 	def move_marker(self, droneID, location):
 		frame = self.page().mainFrame()
 		frame.evaluateJavaScript('change_pos(%s, %s, %s);' % (droneID, location[0], location[1]))
 
-	def draw_line(start, end):
+	def draw_line(self, start, end):
 		frame = self.page().mainFrame()
 		frame.evaluateJavaScript('draw_line(%s, %s, %s, %s);' % (start[0], start[1], end[0], end[1]))
 
-	def remove_all_lines():
+	def remove_all_lines(self):
 		frame = self.page().mainFrame()
 		frame.evaluateJavaScript('remove_all_lines();')
 
