@@ -2,8 +2,8 @@ var map;
 var startLatLng = {lat: 36.374092, lng: 127.365638}
 var startLatLng2 = {lat: 36.374383, lng: 127.365327}
 var marker;
-var droneList = []
-var lineList = []
+var droneList = [];
+var lineList = [];
 
 var lineSymbol = {
 	path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW
@@ -14,9 +14,9 @@ var infoWindow = new google.maps.InfoWindow({
 	content: null
 });
 
-function struct_drone(marker, id) {
-	var marker = marker;
-	var id = id;
+function struct_drone() {
+	var marker = '';
+	var id = '';
 }
 
 
@@ -35,8 +35,7 @@ function change_pos(id, lat, lng) {
 
 	// existing drone
 	for(var i=0; i<idx; i++) {
-		if (droneList[i] != null && id == droneList[i].id) {
-			alert(id);
+		if (id == droneList[i].id) {
 			droneList[i].marker.setPosition({lat: lat, lng: lng});
 			return;
 		}
@@ -53,8 +52,9 @@ function change_pos(id, lat, lng) {
 		infoWindow.open(map, marker);
 	});
 
-	var new_drone = new struct_drone(marker, id);
-	droneList.push(new_drone);
+	droneList[idx] = new struct_drone();
+	droneList[idx].marker = marker;
+	droneList[idx].id = id;
 }
 
 function remove_marker(id) {
