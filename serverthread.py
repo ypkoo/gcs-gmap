@@ -16,7 +16,7 @@ import sys
 
 ''' Global variables -------------------------------------------------------'''
 
-HOST    = '10.10.0.100'
+HOST    = '127.0.0.1'
 PORT    = 56789
 ADDR    = (HOST, PORT)
 BUFSIZE = 1024

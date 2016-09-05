@@ -1,15 +1,3 @@
-<!DOCTYPE html>
-<html>
-	<head>
-		<style type="text/css">
-			html, body { height: 100%; margin: 0; padding: 0; }
-			#map { height: 100%; }
-		</style>
-	</head>
-	<body>
-		<div id="map"></div>
-		<script type="text/javascript">
-
 var map;
 var startLatLng = {lat: 36.374092, lng: 127.365638}
 var startLatLng2 = {lat: 36.374383, lng: 127.365327}
@@ -68,9 +56,3 @@ function remove_marker(id) {
 		}
 	}
 }
-		</script>
-		<script async defer
-			src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA7tC2rVe1dZ5iGvhGX8q4xxTbQ_dzAh9A&callback=initMap">
-		</script>
-	</body>
-</html>
