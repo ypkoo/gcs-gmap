@@ -315,14 +315,19 @@ class Drone:
 				
 	def getId(self):
 		return self.id
+
 	def getSocket(self):
 		return self.socket
+
 	def getLocation(self):
 		return self.location
+
 	def setLocation(self, x, y, z):
 		self.location = (x, y, z)
+
 	def getMAC(self):
 		return self.mac
+
 	def setMAC(self, mac):
 		self.mac = mac
 
@@ -502,6 +507,8 @@ class GMapWebView(QWebView):
 		self.timer.timeout.connect(self.update_gmap)
 		self.timer.start(PERIOD)
 
+		self.frame = self.page().mainFrame()
+
 	def update_gmap(self):
 		global drone_list
 		# print '		gmap update!'
@@ -512,7 +519,8 @@ class GMapWebView(QWebView):
 		for drone in drone_list:
 			droneID = drone.getId()
 			location = drone.getLocation()
-			self.move_marker(droneID, location)
+			infoString = self.build_info_string(drone)
+			self.update_marker(droneID, location, infoString)
 
 		for drone in drone_list:
 			self.remove_all_lines()
@@ -523,25 +531,28 @@ class GMapWebView(QWebView):
 					self.draw_line(nbrDrone.getLocation(), nbrDrone.getLocation())
 
 
-	def move_marker(self, droneID, location):
-		frame = self.page().mainFrame()
-		frame.evaluateJavaScript('change_pos(%s, %s, %s);' % (droneID, location[0], location[1]))
+	def update_marker(self, droneID, location, infoString):
+		self.frame.evaluateJavaScript('update_marker(%s, %s, %s, %s);' % (droneID, location[0], location[1], infoString))
 
 	def remove_marker(self, droneID):
-		frame = self.page().mainFrame()
-		frame.evaluateJavaScript('remove_marker(%s);' % (droneID))
+		self.frame.evaluateJavaScript('remove_marker(%s);' % (droneID))
 
 	def remove_all_markers(self):
-		frame = self.page().mainFrame()
-		frame.evaluateJavaScript('remove_all_markers();')
+		self.frame.evaluateJavaScript('remove_all_markers();')
 
 	def draw_line(self, start, end):
-		frame = self.page().mainFrame()
-		frame.evaluateJavaScript('draw_line(%s, %s, %s, %s);' % (start[0], start[1], end[0], end[1]))
+		self.frame.evaluateJavaScript('draw_line(%s, %s, %s, %s);' % (start[0], start[1], end[0], end[1]))
 
 	def remove_all_lines(self):
-		frame = self.page().mainFrame()
-		frame.evaluateJavaScript('remove_all_lines();')
+		self.frame.evaluateJavaScript('remove_all_lines();')
+
+	def build_info_string(self, drone):
+		ret = ""
+
+		for neighbor in drone.neighborList:
+			ret = ret + neighbor.getId()
+
+		return ret
 
 
 

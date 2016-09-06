@@ -17,6 +17,7 @@ var infoWindow = new google.maps.InfoWindow({
 function struct_drone() {
 	var marker = '';
 	var id = '';
+	var infoWindow = '';
 }
 
 function initMap() {
@@ -38,16 +39,17 @@ function initMap() {
 }
 
 function map_clicked(event) {
-	return;
+	alert("clicked!");
 }
 
-function change_pos(id, lat, lng) {
+function update_marker(id, lat, lng, infoString) {
 	var idx = droneList.length;
 
 	// existing drone
 	for(var i=0; i<idx; i++) {
 		if (id == droneList[i].id) {
 			droneList[i].marker.setPosition({lat: lat, lng: lng});
+			droneList[i].infoWindow.setContent(infoString);
 			return;
 		}
 	}
@@ -63,27 +65,13 @@ function change_pos(id, lat, lng) {
 	});
 
 	marker.addListener('click', function() {
-		infoString = info_string(id);
-		infoWindow.setContent(infoString);
 		infoWindow.open(map, marker);
 	});
 
 	droneList[idx] = new struct_drone();
 	droneList[idx].marker = marker;
 	droneList[idx].id = id;
-}
-
-function info_string(id) {
-	for(var i=0; i<idx; i++) {
-		if (id == droneList[i].id) {
-			drone = droneList[i];
-			break;
-		}
-	}
-
-	if (drone == undefined) {
-		return null;
-	}
+	droneList[idx].infoWindow = infoWindow;
 }
 
 function remove_marker(id) {
