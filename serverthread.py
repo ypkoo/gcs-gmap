@@ -555,8 +555,6 @@ class GMapWebView(QWebView):
 		return ret
 
 
-
-
 class MainFrame(QWidget):
 	def __init__(self):
 		super(MainFrame, self).__init__()
