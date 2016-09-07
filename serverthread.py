@@ -16,7 +16,7 @@ import sys
 
 ''' Global variables -------------------------------------------------------'''
 
-HOST    = '127.0.0.1'
+HOST    = '10.10.0.103'
 PORT    = 56789
 ADDR    = (HOST, PORT)
 BUFSIZE = 1024
@@ -519,20 +519,29 @@ class GMapWebView(QWebView):
 		for drone in drone_list:
 			droneID = drone.getId()
 			location = drone.getLocation()
-			infoString = self.build_info_string(drone)
-			self.update_marker(droneID, location, infoString)
+			# infoString = self.build_info_string(drone)
+			self.update_marker(droneID, location)
 
 		for drone in drone_list:
 			self.remove_all_lines()
+			maclist = ""
+			for mac in drone.neighborList:
+				maclist = maclist + mac
+
+			print "maclist: " + maclist
+
 			for neighbor in drone.neighborList:
+
 				nbrDrone = drone_by_mac(neighbor)
 
 				if nbrDrone != None:
 					self.draw_line(nbrDrone.getLocation(), nbrDrone.getLocation())
+				else:
+					print "		drone by mac none"
 
 
-	def update_marker(self, droneID, location, infoString):
-		self.frame.evaluateJavaScript('update_marker(%s, %s, %s, %s);' % (droneID, location[0], location[1], infoString))
+	def update_marker(self, droneID, location):
+		self.frame.evaluateJavaScript('update_marker(%s, %s, %s);' % (droneID, location[0], location[1]))
 
 	def remove_marker(self, droneID):
 		self.frame.evaluateJavaScript('remove_marker(%s);' % (droneID))
@@ -549,8 +558,10 @@ class GMapWebView(QWebView):
 	def build_info_string(self, drone):
 		ret = ""
 
-		for neighbor in drone.neighborList:
-			ret = ret + neighbor.getId()
+		for neighborMac in drone.neighborList:
+			neighbor = drone_by_mac(neighborMac)
+			if neighbor != None:
+				ret = ret + neighbor.getId()
 
 		return ret
 
