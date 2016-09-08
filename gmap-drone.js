@@ -23,21 +23,13 @@ function initMap() {
 	});
 
 	// var image = 'images/drone.png';
-
-	map.addListener('click', map_clicked);
-
-	//test marker
-	var marker = new google.maps.Marker({
-		position: startLatLng,
-		map: map
-	});
 }
 
 // function map_clicked(event) {
 // 	alert("clicked!");
 // }
 
-function update_marker(id, lat, lng) {
+function update_marker(id, lat, lng, infoString) {
 
 	var idx = droneList.length;
 
@@ -45,7 +37,7 @@ function update_marker(id, lat, lng) {
 	for(var i=0; i<idx; i++) {
 		if (id == droneList[i].id) {
 			droneList[i].marker.setPosition({lat: lat, lng: lng});
-			// droneList[i].infoWindow.setContent(infoString);
+			droneList[i].infoWindow.setContent(infoString);
 			return;
 		}
 	}
@@ -56,18 +48,18 @@ function update_marker(id, lat, lng) {
 		map: map
 	});
 
-	// var infoWindow = new google.maps.InfoWindow({
-	//     content: ""
-	// });
+	var infoWindow = new google.maps.InfoWindow({
+	    content: ""
+	});
 
-	// marker.addListener('click', function() {
-	// 	infoWindow.open(map, marker);
-	// });
+	marker.addListener('click', function() {
+		infoWindow.open(map, marker);
+	});
 
 	droneList[idx] = new struct_drone();
 	droneList[idx].marker = marker;
 	droneList[idx].id = id;
-	// droneList[idx].infoWindow = infoWindow;
+	droneList[idx].infoWindow = infoWindow;
 }
 
 function remove_marker(id) {
@@ -90,13 +82,31 @@ function remove_all_markers() {
 
 function draw_line(startLat, startLng, endLat, endLng) {
 	var line = new google.maps.Polyline({
-	path: [{lat: startLat, lng: startLng}, {lat: endLat, lng: endLng}],
-	icons: [{
-		icon: lineSymbol,
-		offset: '100%'
-	}],
-	map: map
+		path: [{lat: startLat, lng: startLng}, {lat: endLat, lng: endLng}],
+		icons: [{
+			icon: lineSymbol,
+			offset: '100%'
+		}],
+		// geodesic: true,
+		// strokeColor: '#FF0000',
+		// strokeOpacity: 1.0,
+		// strokeWeight: 2,
+		map: map
 	});
+	// console.log(startLat);
+
+	// var lineCoordinate = [{lat: startLat, lng: startLng}, {lat: endLat, lng: endLng}];
+ //  var line = new google.maps.Polyline({
+ //    path: lineCoordinate,
+ //    geodesic: true,
+ //    strokeColor: '#FF0000',
+ //    strokeOpacity: 1.0,
+ //    strokeWeight: 2
+ //  });
+
+ //  line.setMap(map);
+
+
 
 	lineList.push(line);
 }
