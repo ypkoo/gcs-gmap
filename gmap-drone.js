@@ -26,6 +26,7 @@ function initMap() {
 
 	map.addListener('click', map_clicked);
 
+
 	//test marker
 	var marker = new google.maps.Marker({
 		position: startLatLng,
@@ -33,9 +34,13 @@ function initMap() {
 	});
 }
 
-// function map_clicked(event) {
-// 	alert("clicked!");
-// }
+function map_clicked(e) {
+	var latLng = e.latLng;
+	var lat = latLng.lat();
+	var lng = latLng.lng();
+
+	alert("lat: " + lat + "\nlng: " + lng);
+}
 
 function update_marker(id, lat, lng) {
 
