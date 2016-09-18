@@ -16,7 +16,7 @@ import sys
 
 ''' Global variables -------------------------------------------------------'''
 
-HOST    = '10.10.0.103'
+HOST    = '127.0.0.1'
 PORT    = 56789
 ADDR    = (HOST, PORT)
 BUFSIZE = 1024
@@ -412,22 +412,30 @@ class CmdLayout(QVBoxLayout):
 		launchBtn = QPushButton('Launch')
 		relocBtn = QPushButton('Relocation')
 		landBtn = QPushButton('Land')
+		droneListCombo = QComboBox()
 
-		launchLandLayout = QHBoxLayout()
-		launchLandLayout.addWidget(launchBtn)
-		launchLandLayout.addWidget(landBtn)
-
-		self.addWidget(commandLabel)
-		self.addLayout(launchLandLayout)
-		self.addWidget(relocBtn)
+		launchLayout = QHBoxLayout()
+		launchLayout.addWidget(droneListCombo)
+		launchLayout.addWidget(launchBtn)
 		
+		self.addWidget(commandLabel)
+		self.addLayout(launchLayout)
+		self.addWidget(relocBtn)
+		self.addWidget(landBtn)
 
 		launchBtn.clicked.connect(self.on_launch)
 		landBtn.clicked.connect(self.on_landing)
 		relocBtn.clicked.connect(self.on_relocation)
 
+		self.timer = QTimer()
+		self.timer.timeout.connect(self.update_drone_list)
+		self.timer.start(PERIOD)
+
 	def update_drone_list(self):
-		pass
+		global drone_list
+		for drone in drone_list:
+			self.droneListCombo.addItem(str(drone.getId()))
+			print drone.getId()
 
 	def on_launch(self, event):
 		LOG('Command', 'button event - launch')
@@ -517,6 +525,7 @@ class GMapWebView(QWebView):
 		self.remove_all_markers()
 
 		for drone in drone_list:
+			self.remove_all_markers()
 			droneID = drone.getId()
 			location = drone.getLocation()
 			# infoString = self.build_info_string(drone)

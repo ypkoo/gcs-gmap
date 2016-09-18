@@ -225,6 +225,8 @@ class ClientThread(Thread):
 			LOG('Client', repr(e))
 			return
 
+	def run(self):
+
 		batctlOut = subprocess.Popen(["sudo batctl o"], stdout=subprocess.PIPE, shell=True).communicate()[0]
 		grepOut = subprocess.Popen(["grep '(bat0'"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=True).communicate(input=batctlOut)[0]
 		selfMac = subprocess.Popen(["awk '{print $5}'"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=True).communicate(input=grepOut)[0]
@@ -243,11 +245,11 @@ class ClientThread(Thread):
 		while True:
 			try:
 				batctlOut = subprocess.Popen(["sudo batctl o"], stdout=subprocess.PIPE, shell=True).communicate()[0]
-
 				neighborMac_ = batctlOut.split("\n")[2:-1]
 				neighborMac = ""
 				for i in neighborMac_:
 					neighborMac = neighborMac + i.split(" ")[0] + " "
+					
 				try:
 					data = self.socket.recv(BUFSIZE)
 				except KeyboardInterrupt:
@@ -325,25 +327,26 @@ class ClientThread(Thread):
 				return
 
 ''' main start '''
+if __name__ = '__main__':
 
-psOut = subprocess.Popen(["ps -al"], stdout=subprocess.PIPE, shell=True).communicate()[0]
-grepOut = subprocess.Popen(["grep 'roslaunch'"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=True).communicate(input=psOut)[0]
-if not grepOut:
-	LOG('Client', 'Roslaunch not running yet!\nLaunching ROS now')
-	subprocess.Popen(["roslaunch dji_sdk sdk_manifold.launch"], stdout=subprocess.PIPE, shell=True).communicate()[0]
-	time.sleep(1)
+	psOut = subprocess.Popen(["ps -al"], stdout=subprocess.PIPE, shell=True).communicate()[0]
+	grepOut = subprocess.Popen(["grep 'roslaunch'"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=True).communicate(input=psOut)[0]
+	if not grepOut:
+		LOG('Client', 'Roslaunch not running yet!\nLaunching ROS now')
+		subprocess.Popen(["roslaunch dji_sdk sdk_manifold.launch"], stdout=subprocess.PIPE, shell=True).communicate()[0]
+		time.sleep(1)
 
-M100thread = M100Thread()
-M100thread.start()
+	M100thread = M100Thread()
+	M100thread.start()
 
-clientthread = ClientThread()
-clientthread.socket.shutdown(socket.SHUT_RDWR)
-clientthread.socket.close()
+	clientthread = ClientThread()
+	clientthread.socket.shutdown(socket.SHUT_RDWR)
+	clientthread.socket.close()
 
-Done = True
-M100thread.join()
+	Done = True
+	M100thread.join()
 
-sys.exit()
+	sys.exit()
 
 
 
