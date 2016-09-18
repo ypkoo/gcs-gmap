@@ -194,22 +194,44 @@ class ServerThread(Thread):
 
 	def guiLaunchHandler(self):
 		LOG('Server', 'Launch message')
-		for drone_in_list in drone_list[:]:
-			droneID = drone_in_list.getId()
-			droneSocket = drone_in_list.getSocket()
-			message = 'launch'
-			LOG('Server', 'send a message to drone ' + str(droneID) + ': ' + message)
-			try:
-				droneSocket.send(message + '\t')
-			except Exception, e:
-				LOG('Server', repr(e))
-				droneSocket.shutdown(socket.SHUT_RDWR)
-				connection_list.remove(droneSocket)
-				drone_list.remove(drone_in_list)
-				drone_in_list.__del__()
-				return
+		droneID = int(msg[2])
 
-		output = ('Drone launch')
+		for drone_in_list in drone_list:
+			if drone_in_list.getId() == droneID:
+				break
+		else:
+			LOG('Server', 'cannot find drone ' + str(droneID))
+			return
+
+		droneSocket = drone_in_list.getSocket()
+		message = 'launch'
+		LOG('Server', 'send a message to drone ' + str(droneID) + ': ' + message)
+		try:
+			droneSocket.send(message + '\t')
+		except Exception, e:
+			LOG('Server', repr(e))
+			droneSocket.shutdown(socket.SHUT_RDWR)
+			connection_list.remove(droneSocket)
+			drone_list.remove(drone_in_list)
+			drone_in_list.__del__()
+			return
+
+		# for drone_in_list in drone_list[:]:
+		# 	droneID = drone_in_list.getId()
+		# 	droneSocket = drone_in_list.getSocket()
+		# 	message = 'launch'
+		# 	LOG('Server', 'send a message to drone ' + str(droneID) + ': ' + message)
+		# 	try:
+		# 		droneSocket.send(message + '\t')
+		# 	except Exception, e:
+		# 		LOG('Server', repr(e))
+		# 		droneSocket.shutdown(socket.SHUT_RDWR)
+		# 		connection_list.remove(droneSocket)
+		# 		drone_list.remove(drone_in_list)
+		# 		drone_in_list.__del__()
+		# 		return
+
+		output = ('Drone %d launch' % droneID)
 		LOG('Server', output)
 		self.signal.emit(output)
 
@@ -438,8 +460,17 @@ class CmdLayout(QVBoxLayout):
 			print drone.getId()
 
 	def on_launch(self, event):
+		global drone_list
+		droneID = self.droneListCombo.currentText()
+
+		for drone_in_list in drone_list:
+			if drone_in_list.getId() == int(droneID):
+				break
+		else:
+			return
+
 		LOG('Command', 'button event - launch')
-		message = 'gui launch'
+		message = 'gui launch %s' % droneID
 		LOG('Launch', 'send a message to the socket server thread: ' + message)
 		try:
 			self.sock.send(message + '\t')
