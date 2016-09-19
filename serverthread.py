@@ -584,7 +584,7 @@ class GMapWebView(QWebView):
 		# print '		gmap update!'
 		LOG('GUI', 'update gmap')
 
-		self.remove_all_markers()
+		# self.remove_all_markers()
 
 		for drone in drone_list:
 			# self.remove_all_markers()
@@ -613,9 +613,9 @@ class GMapWebView(QWebView):
 
 
 	def update_marker(self, droneID, location, infoString):
-		print "info string: " + infoString
-		print " ".join([str(droneID), str(location[0]), str(location[1]), str(infoString)])
-		self.frame.evaluateJavaScript('update_marker(%s, %s, %s, %s);' % (str(droneID), str(location[0]), str(location[1]), str(infoString)))
+		# print "info string: " + infoString
+		# print " ".join([str(droneID), str(location[0]), str(location[1]), str(infoString)])
+		self.frame.evaluateJavaScript('update_marker(%s, %s, %s);' % (str(droneID), str(location[0]), str(location[1])))
 
 	def remove_marker(self, droneID):
 		self.frame.evaluateJavaScript('remove_marker(%s);' % (droneID))

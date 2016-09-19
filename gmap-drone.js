@@ -41,16 +41,16 @@ function map_clicked(e) {
 	coordinateUpdater.update(lat, lng);
 }
 
-function update_marker(id, lat, lng, infoString) {
+function update_marker(id, lat, lng) {
 	// alert('hello-1');
 	var idx = droneList.length;
-	alert(droneList);
+	// alert(droneList);
 	// alert('hello0');
 	// existing drone
 	for(var i=0; i<idx; i++) {
 		if (id == droneList[i].id) {
 			droneList[i].marker.setPosition({lat: lat, lng: lng});
-			droneList[i].infoWindow.setContent(infoString);
+			// droneList[i].infoWindow.setContent(infoString);
 			return;
 		}
 	}
@@ -63,18 +63,18 @@ function update_marker(id, lat, lng, infoString) {
 		map: map
 	});
 	// alert('hello2');
-	var infoWindow = new google.maps.InfoWindow({
-	    content: ""
-	});
+	// var infoWindow = new google.maps.InfoWindow({
+	//     content: ""
+	// });
 	// alert('hello3');
-	marker.addListener('click', function() {
-		infoWindow.open(map, marker);
-	});
+	// marker.addListener('click', function() {
+	// 	infoWindow.open(map, marker);
+	// });
 	// alert('hello4');
 	droneList[idx] = new struct_drone();
 	droneList[idx].marker = marker;
 	droneList[idx].id = id;
-	droneList[idx].infoWindow = infoWindow;
+	// droneList[idx].infoWindow = infoWindow;
 	// alert('hello');
 }
 
@@ -89,7 +89,8 @@ function remove_marker(id) {
 }
 
 function remove_all_markers() {
-	for (var i=0; i<droneList; i++) {
+	var idx = droneList.length;
+	for (var i=0; i<idx; i++) {
 		droneList[i].marker.setMap(null);
 	}
 
