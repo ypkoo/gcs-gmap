@@ -29,37 +29,41 @@ function initMap() {
 // 	alert("clicked!");
 // }
 
-function update_marker(id, lat, lng, infoString) {
+function test_func() {
+	alert('test!');
+}
 
+function update_marker(id, lat, lng) {
+	// alert('start!');
 	var idx = droneList.length;
 
 	// existing drone
 	for(var i=0; i<idx; i++) {
 		if (id == droneList[i].id) {
 			droneList[i].marker.setPosition({lat: lat, lng: lng});
-			droneList[i].infoWindow.setContent(infoString);
+			// droneList[i].infoWindow.setContent(infoString);
 			return;
 		}
 	}
-
+	// alert('hello');
 	// new drone
 	var marker = new google.maps.Marker({
 		position: {lat: lat, lng: lng},
 		map: map
 	});
 
-	var infoWindow = new google.maps.InfoWindow({
-	    content: ""
-	});
+	// var infoWindow = new google.maps.InfoWindow({
+	//     content: ""
+	// });
 
-	marker.addListener('click', function() {
-		infoWindow.open(map, marker);
-	});
+	// marker.addListener('click', function() {
+	// 	infoWindow.open(map, marker);
+	// });
 
 	droneList[idx] = new struct_drone();
 	droneList[idx].marker = marker;
 	droneList[idx].id = id;
-	droneList[idx].infoWindow = infoWindow;
+	// droneList[idx].infoWindow = infoWindow;
 }
 
 function remove_marker(id) {
