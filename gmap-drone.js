@@ -23,16 +23,29 @@ function initMap() {
 	});
 
 	// var image = 'images/drone.png';
+	map.addListener('click', map_clicked);
+
+
+	//test marker
+	// var marker = new google.maps.Marker({
+	// 	position: startLatLng,
+	// 	map: map
+	// });
 }
 
-// function map_clicked(event) {
-// 	alert("clicked!");
-// }
+function map_clicked(e) {
+	var latLng = e.latLng;
+	var lat = latLng.lat();
+	var lng = latLng.lng();
+
+	coordinateUpdater.update(lat, lng);
+}
 
 function update_marker(id, lat, lng, infoString) {
-
+	// alert('hello-1');
 	var idx = droneList.length;
-
+	alert(droneList);
+	// alert('hello0');
 	// existing drone
 	for(var i=0; i<idx; i++) {
 		if (id == droneList[i].id) {
@@ -42,24 +55,27 @@ function update_marker(id, lat, lng, infoString) {
 		}
 	}
 
+	// alert('hello1');
+
 	// new drone
 	var marker = new google.maps.Marker({
 		position: {lat: lat, lng: lng},
 		map: map
 	});
-
+	// alert('hello2');
 	var infoWindow = new google.maps.InfoWindow({
 	    content: ""
 	});
-
+	// alert('hello3');
 	marker.addListener('click', function() {
 		infoWindow.open(map, marker);
 	});
-
+	// alert('hello4');
 	droneList[idx] = new struct_drone();
 	droneList[idx].marker = marker;
 	droneList[idx].id = id;
 	droneList[idx].infoWindow = infoWindow;
+	// alert('hello');
 }
 
 function remove_marker(id) {
