@@ -23,7 +23,6 @@ function initMap() {
 	});
 
 	// var image = 'images/drone.png';
-
 	map.addListener('click', map_clicked);
 
 
@@ -43,9 +42,10 @@ function map_clicked(e) {
 }
 
 function update_marker(id, lat, lng) {
-
+	// alert('hello-1');
 	var idx = droneList.length;
-
+	// alert(droneList);
+	// alert('hello0');
 	// existing drone
 	for(var i=0; i<idx; i++) {
 		if (id == droneList[i].id) {
@@ -55,24 +55,27 @@ function update_marker(id, lat, lng) {
 		}
 	}
 
+	// alert('hello1');
+
 	// new drone
 	var marker = new google.maps.Marker({
 		position: {lat: lat, lng: lng},
 		map: map
 	});
-
+	// alert('hello2');
 	// var infoWindow = new google.maps.InfoWindow({
 	//     content: ""
 	// });
-
+	// alert('hello3');
 	// marker.addListener('click', function() {
 	// 	infoWindow.open(map, marker);
 	// });
-
+	// alert('hello4');
 	droneList[idx] = new struct_drone();
 	droneList[idx].marker = marker;
 	droneList[idx].id = id;
 	// droneList[idx].infoWindow = infoWindow;
+	// alert('hello');
 }
 
 function remove_marker(id) {
@@ -86,7 +89,8 @@ function remove_marker(id) {
 }
 
 function remove_all_markers() {
-	for (var i=0; i<droneList; i++) {
+	var idx = droneList.length;
+	for (var i=0; i<idx; i++) {
 		droneList[i].marker.setMap(null);
 	}
 
@@ -95,13 +99,31 @@ function remove_all_markers() {
 
 function draw_line(startLat, startLng, endLat, endLng) {
 	var line = new google.maps.Polyline({
-	path: [{lat: startLat, lng: startLng}, {lat: endLat, lng: endLng}],
-	icons: [{
-		icon: lineSymbol,
-		offset: '100%'
-	}],
-	map: map
+		path: [{lat: startLat, lng: startLng}, {lat: endLat, lng: endLng}],
+		icons: [{
+			icon: lineSymbol,
+			offset: '100%'
+		}],
+		// geodesic: true,
+		// strokeColor: '#FF0000',
+		// strokeOpacity: 1.0,
+		// strokeWeight: 2,
+		map: map
 	});
+	// console.log(startLat);
+
+	// var lineCoordinate = [{lat: startLat, lng: startLng}, {lat: endLat, lng: endLng}];
+ //  var line = new google.maps.Polyline({
+ //    path: lineCoordinate,
+ //    geodesic: true,
+ //    strokeColor: '#FF0000',
+ //    strokeOpacity: 1.0,
+ //    strokeWeight: 2
+ //  });
+
+ //  line.setMap(map);
+
+
 
 	lineList.push(line);
 }

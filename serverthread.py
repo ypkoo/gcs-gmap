@@ -16,11 +16,11 @@ import sys
 
 ''' Global variables -------------------------------------------------------'''
 
-HOST    = '127.0.0.1'
+HOST    = '10.10.0.103'
 PORT    = 56789
 ADDR    = (HOST, PORT)
 BUFSIZE = 1024
-PERIOD  = 1000  # msec - send status report request to every drone periodically
+PERIOD  = 2000  # msec - send status report request to every drone periodically
 DEFAULT_SIZE = (800, 700) # default window size
 drone_list = [] # list of the connected drones
 MAC_list = [] # list of the MAC address of all drone clients
@@ -112,7 +112,7 @@ class ServerThread(Thread):
 									if msg[1] == 'timer':
 										self.guiTimerHandler()
 									elif msg[1] == 'launch':
-										self.guiLaunchHandler()
+										self.guiLaunchHandler(msg)
 									elif msg[1] == 'landing':
 										self.guiLandingHandler()
 									elif msg[1] == 'relocation':
@@ -193,7 +193,7 @@ class ServerThread(Thread):
 			LOG('Server', output)
 			self.signal.emit(output)
 
-	def guiLaunchHandler(self):
+	def guiLaunchHandler(self, msg):
 		LOG('Server', 'Launch message')
 		droneID = int(msg[2])
 
@@ -584,14 +584,14 @@ class GMapWebView(QWebView):
 		# print '		gmap update!'
 		LOG('GUI', 'update gmap')
 
-		self.remove_all_markers()
+		# self.remove_all_markers()
 
 		for drone in drone_list:
-			self.remove_all_markers()
+			# self.remove_all_markers()
 			droneID = drone.getId()
 			location = drone.getLocation()
-			# infoString = self.build_info_string(drone)
-			self.update_marker(droneID, location)
+			infoString = self.build_info_string(drone)
+			self.update_marker(droneID, location, str(infoString))
 
 		for drone in drone_list:
 			self.remove_all_lines()
@@ -606,13 +606,16 @@ class GMapWebView(QWebView):
 				nbrDrone = drone_by_mac(neighbor)
 
 				if nbrDrone != None:
-					self.draw_line(nbrDrone.getLocation(), nbrDrone.getLocation())
+					print "nbr found: " + str(nbrDrone.getMAC())
+					self.draw_line(drone.getLocation(), nbrDrone.getLocation())
 				else:
 					print "		drone by mac none"
 
 
-	def update_marker(self, droneID, location):
-		self.frame.evaluateJavaScript('update_marker(%s, %s, %s);' % (droneID, location[0], location[1]))
+	def update_marker(self, droneID, location, infoString):
+		# print "info string: " + infoString
+		# print " ".join([str(droneID), str(location[0]), str(location[1]), str(infoString)])
+		self.frame.evaluateJavaScript('update_marker(%s, %s, %s);' % (str(droneID), str(location[0]), str(location[1])))
 
 	def remove_marker(self, droneID):
 		self.frame.evaluateJavaScript('remove_marker(%s);' % (droneID))
@@ -621,6 +624,7 @@ class GMapWebView(QWebView):
 		self.frame.evaluateJavaScript('remove_all_markers();')
 
 	def draw_line(self, start, end):
+		# print " ".join([str(start[0]), start[1], end[0], end[1]])
 		self.frame.evaluateJavaScript('draw_line(%s, %s, %s, %s);' % (start[0], start[1], end[0], end[1]))
 
 	def remove_all_lines(self):
@@ -632,7 +636,7 @@ class GMapWebView(QWebView):
 		for neighborMac in drone.neighborList:
 			neighbor = drone_by_mac(neighborMac)
 			if neighbor != None:
-				ret = ret + neighbor.getId()
+				ret = ret + str(neighbor.getId())
 
 		return ret
 
