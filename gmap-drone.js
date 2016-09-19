@@ -28,10 +28,10 @@ function initMap() {
 
 
 	//test marker
-	var marker = new google.maps.Marker({
-		position: startLatLng,
-		map: map
-	});
+	// var marker = new google.maps.Marker({
+	// 	position: startLatLng,
+	// 	map: map
+	// });
 }
 
 function map_clicked(e) {
@@ -39,7 +39,7 @@ function map_clicked(e) {
 	var lat = latLng.lat();
 	var lng = latLng.lng();
 
-	alert("lat: " + lat + "\nlng: " + lng);
+	coordinateUpdater.update(lat, lng);
 }
 
 function update_marker(id, lat, lng) {

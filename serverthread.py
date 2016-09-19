@@ -27,6 +27,7 @@ MAC_list = [] # list of the MAC address of all drone clients
 selected_drone = []
 STATUS_OUTPUT = 'select a drone\n'
 droneSize = 30
+curCoordinate = ("0", "0")
 
 minX=0
 minY=0
@@ -376,10 +377,16 @@ class RelocDialog(QDialog):
 		self.droneListCombo = QComboBox()
 		okBtn = QPushButton('OK')
 
+
+
 		global drone_list
 		for drone in drone_list:
 			self.droneListCombo.addItem(str(drone.getId()))
 			print drone.getId()
+
+		global curCoordinate
+		self.relocX.setText(curCoordinate[0])
+		self.relocY.setText(curCoordinate[1])
 
 		relocLayout.addWidget(labelX, 1, 0)
 		relocLayout.addWidget(self.relocX, 1, 1)
@@ -434,10 +441,10 @@ class CmdLayout(QVBoxLayout):
 		launchBtn = QPushButton('Launch')
 		relocBtn = QPushButton('Relocation')
 		landBtn = QPushButton('Land')
-		droneListCombo = QComboBox()
+		self.droneListCombo = QComboBox()
 
 		launchLayout = QHBoxLayout()
-		launchLayout.addWidget(droneListCombo)
+		launchLayout.addWidget(self.droneListCombo)
 		launchLayout.addWidget(launchBtn)
 		
 		self.addWidget(commandLabel)
@@ -449,11 +456,12 @@ class CmdLayout(QVBoxLayout):
 		landBtn.clicked.connect(self.on_landing)
 		relocBtn.clicked.connect(self.on_relocation)
 
-		self.timer = QTimer()
-		self.timer.timeout.connect(self.update_drone_list)
-		self.timer.start(PERIOD)
+		# self.timer = QTimer()
+		# self.timer.timeout.connect(self.update_drone_list)
+		# self.timer.start(PERIOD)
 
 	def update_drone_list(self):
+		self.droneListCombo.clear()
 		global drone_list
 		for drone in drone_list:
 			self.droneListCombo.addItem(str(drone.getId()))
@@ -513,14 +521,19 @@ class DroneStatusLayout(QVBoxLayout):
 	def __init__(self):
 		super(DroneStatusLayout, self).__init__()
 		self.statusLabel = QLabel('Status')
+		self.coordinateLabel = QLabel('Coornidate')
 		self.statusTextbox = QTextEdit()
 		self.statusTextbox.setReadOnly(True)
+		self.coordinateTextbox = QTextEdit()
+		self.coordinateTextbox.setReadOnly(True)
 		self.addWidget(self.statusLabel)
-		self.addWidget(self.statusTextbox)
+		self.addWidget(self.statusTextbox, 2)
+		self.addWidget(self.coordinateLabel)
+		self.addWidget(self.coordinateTextbox, 1)
 
-		self.timer = QTimer()
-		self.timer.timeout.connect(self.update_drone_list)
-		self.timer.start(PERIOD)
+		# self.timer = QTimer()
+		# self.timer.timeout.connect(self.update_drone_list)
+		# self.timer.start(PERIOD)
 
 
 	def update_drone_list(self):
@@ -533,6 +546,21 @@ class DroneStatusLayout(QVBoxLayout):
 		self.statusTextbox.setText(STATUS_OUTPUT)
 		STATUS_OUTPUT = ''
 
+	def update_coordinate(self):
+		global curCoordinate
+		self.coordinateTextbox.clear()
+		text = "lat: " + str(curCoordinate[0]) + "\nlng: " + str(curCoordinate[1])
+		self.coordinateTextbox.setText(text)
+
+class CoordinateUpdater(QObject):
+	def __init__(self):
+		super(CoordinateUpdater, self).__init__()
+
+	@pyqtSlot(str, str)
+	def update(self, lat, lng):
+		global curCoordinate
+		curCoordinate = (lat, lng)
+
 
 class GMapWebView(QWebView):
 
@@ -542,11 +570,14 @@ class GMapWebView(QWebView):
 		local_url = QUrl.fromLocalFile(file_path)
 		self.load(local_url)
 
-		self.timer = QTimer()
-		self.timer.timeout.connect(self.update_gmap)
-		self.timer.start(PERIOD)
+		# self.timer = QTimer()
+		# self.timer.timeout.connect(self.update_gmap)
+		# self.timer.start(PERIOD)
+
+		self.coordinateUpdater = CoordinateUpdater()
 
 		self.frame = self.page().mainFrame()
+		self.frame.addToJavaScriptWindowObject('coordinateUpdater', self.coordinateUpdater)
 
 	def update_gmap(self):
 		global drone_list
@@ -606,6 +637,7 @@ class GMapWebView(QWebView):
 		return ret
 
 
+
 class MainFrame(QWidget):
 	def __init__(self):
 		super(MainFrame, self).__init__()
@@ -656,6 +688,12 @@ class MainFrame(QWidget):
 			self.guiClient.send(message + '\t')
 		except Exception, e:
 			LOG('GUI Frame', repr(e))
+
+		self.gmap.update_gmap()
+		self.commandLayout.update_drone_list()
+		self.statusLayout.update_coordinate()
+
+
 
 		
 if __name__ == '__main__':
