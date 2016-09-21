@@ -217,21 +217,6 @@ class ServerThread(Thread):
 			drone_in_list.__del__()
 			return
 
-		# for drone_in_list in drone_list[:]:
-		# 	droneID = drone_in_list.getId()
-		# 	droneSocket = drone_in_list.getSocket()
-		# 	message = 'launch'
-		# 	LOG('Server', 'send a message to drone ' + str(droneID) + ': ' + message)
-		# 	try:
-		# 		droneSocket.send(message + '\t')
-		# 	except Exception, e:
-		# 		LOG('Server', repr(e))
-		# 		droneSocket.shutdown(socket.SHUT_RDWR)
-		# 		connection_list.remove(droneSocket)
-		# 		drone_list.remove(drone_in_list)
-		# 		drone_in_list.__del__()
-		# 		return
-
 		output = ('Drone %d launch' % droneID)
 		LOG('Server', output)
 		self.signal.emit(output)
@@ -398,7 +383,6 @@ class RelocDialog(QDialog):
 
 		okBtn.clicked.connect(self.on_ok)
 
-
 		self.setLayout(relocLayout)
 
 	def on_ok(self):
@@ -429,10 +413,9 @@ class RelocDialog(QDialog):
 
 
 class CmdLayout(QVBoxLayout):
-	def __init__(self, sock, signal):
+	def __init__(self, sock):
 		super(CmdLayout, self).__init__()
 		self.sock = sock
-		self.signal = signal
 
 		commandLabel = QLabel('Command')
 		launchBtn = QPushButton('Launch')
@@ -453,16 +436,17 @@ class CmdLayout(QVBoxLayout):
 		landBtn.clicked.connect(self.on_landing)
 		relocBtn.clicked.connect(self.on_relocation)
 
-		# self.timer = QTimer()
-		# self.timer.timeout.connect(self.update_drone_list)
-		# self.timer.start(PERIOD)
+	def update_drone_list(self, msg):
 
-	def update_drone_list(self):
-		self.droneListCombo.clear()
-		global drone_list
-		for drone in drone_list:
-			self.droneListCombo.addItem(str(drone.getId()))
-			print drone.getId()
+		if msg[0] == "new":
+			self.droneListCombo.addItem(msg[1])
+		elif msg[0] == "closed":
+			for i in range(self.droneListCombo.count()):
+				if self.droneListCombo.itemText(i) == droneID:
+					self.droneListCombo.removeItem(i)
+					break
+		else:
+			LOG('Command', 'wrong input to update_drone_list')
 
 	def on_launch(self, event):
 		global drone_list
@@ -486,17 +470,14 @@ class CmdLayout(QVBoxLayout):
 			self.__del__()
 
 	def on_relocation(self):
-		print 'hello!!!'
 		relocDialog = RelocDialog(self.sock)
 		relocDialog.exec_()
 
 	def on_landing(self):
-		print 'hello!'
-		self.signal.emit('hello')
+		pass
+
 
 class HistoryLayout(QVBoxLayout):
-
-	historySignal = pyqtSignal(str)
 
 	def __init__(self):
 		super(HistoryLayout, self).__init__()
@@ -505,8 +486,6 @@ class HistoryLayout(QVBoxLayout):
 		self.historyTextbox.setReadOnly(True)
 		self.addWidget(historyLabel)
 		self.addWidget(self.historyTextbox)
-
-		self.historySignal.connect(self.update_history_display)
 
 	def update_history_display(self, msg):
 		self.historyTextbox.append(str(ctime()) + ' ' + msg + '\n')
@@ -543,48 +522,54 @@ class DroneStatusLayout(QVBoxLayout):
 		self.statusTextbox.setText(STATUS_OUTPUT)
 		STATUS_OUTPUT = ''
 
-	def update_coordinate(self):
+	def update_coordinate(self, msg):
 		global curCoordinate
 		self.coordinateTextbox.clear()
 		text = "lat: " + str(curCoordinate[0]) + "\nlng: " + str(curCoordinate[1])
-		self.coordinateTextbox.setText(text)
+		self.coordinateTextbox.setText(msg)
 
-class CoordinateUpdater(QObject):
-	def __init__(self):
-		super(CoordinateUpdater, self).__init__()
+	def update_info_window(self, droneID):
+		global drone_list
 
-	@pyqtSlot(str, str)
-	def update(self, lat, lng):
-		global curCoordinate
-		curCoordinate = (lat, lng)
+		for drone_in_list in drone_list:
+			if drone_in_list.getId() == int(droneID):
+				break
+
+		infoString = drone_in_list.getLocation()[0]
+
+		self.statusTextbox.setText(infoString)
+
+
+class JSCommunicator(QObject):
+	def __init__(self, signal):
+		super(JSCommunicator, self).__init__()
+
+		self.signal = signal
+
+	@pyqtSlot(str)
+	def emit_signal(self, msg):
+		self.signal.emit(msg)
 
 
 class GMapWebView(QWebView):
 
-	def __init__(self):
+	def __init__(self, signal):
 		super(GMapWebView, self).__init__()
 		file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "gmap-drone.html"))
 		local_url = QUrl.fromLocalFile(file_path)
 		self.load(local_url)
 
-		# self.timer = QTimer()
-		# self.timer.timeout.connect(self.update_gmap)
-		# self.timer.start(PERIOD)
-
-		self.coordinateUpdater = CoordinateUpdater()
+		self.signal = signal
+		self.jsCommunicator = JSCommunicator(self.signal)
 
 		self.frame = self.page().mainFrame()
-		self.frame.addToJavaScriptWindowObject('coordinateUpdater', self.coordinateUpdater)
+		self.frame.addToJavaScriptWindowObject('jsCommunicator', self.jsCommunicator)
 
 	def update_gmap(self):
 		global drone_list
-		# print '		gmap update!'
 		LOG('GUI', 'update gmap')
 
-		# self.remove_all_markers()
-
 		for drone in drone_list:
-			# self.remove_all_markers()
 			droneID = drone.getId()
 			location = drone.getLocation()
 			infoString = self.build_info_string(drone)
@@ -595,8 +580,6 @@ class GMapWebView(QWebView):
 			maclist = ""
 			for mac in drone.neighborList:
 				maclist = maclist + mac
-
-			print "maclist: " + maclist
 
 			for neighbor in drone.neighborList:
 
@@ -634,33 +617,43 @@ class GMapWebView(QWebView):
 			if neighbor != None:
 				ret = ret + str(neighbor.getId())
 
+		if ret == "":
+			ret = "No neighbor"
+
 		return ret
 
 
-
 class MainFrame(QWidget):
+
+	serverSignal = pyqtSignal(str)
+	jsSignal = pyqtSignal(str)
+
 	def __init__(self):
 		super(MainFrame, self).__init__()
+
+		self.serverSignal.connect(self.server_signal_handler)
+		self.jsSignal.connect(self.js_signal_handler)
+
 		# a socket to send message from GUI frame to the socket server
 		self.setWindowTitle('Ground Control Station')
 		self.guiClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 		self.grid = QGridLayout()
-		self.gmap = GMapWebView()
+		self.gmap = GMapWebView(self.jsSignal)
 
 		self.statusLayout = DroneStatusLayout()
 		self.historyLayout = HistoryLayout()
-		self.commandLayout = CmdLayout(self.guiClient, self.historyLayout.get_signal())
+		self.commandLayout = CmdLayout(self.guiClient)
 
 		self.grid.addWidget(self.gmap, 1, 0, 2, 1)
 		self.grid.addLayout(self.historyLayout, 3, 0)
-		self.grid.addLayout(self.statusLayout, 1, 1)
-		self.grid.addLayout(self.commandLayout, 2, 1)
+		self.grid.addLayout(self.statusLayout, 1, 1, 2, 1)
+		self.grid.addLayout(self.commandLayout, 3, 1)
 
 		self.setLayout(self.grid)
 
 		try:
-			self.server = ServerThread(self.historyLayout.get_signal())
+			self.server = ServerThread(self.serverSignal)
 		except ValueError as e:
 			LOG('GUI Frame', repr(e))
 			sys.exit()
@@ -690,10 +683,25 @@ class MainFrame(QWidget):
 			LOG('GUI Frame', repr(e))
 
 		self.gmap.update_gmap()
-		self.commandLayout.update_drone_list()
-		self.statusLayout.update_coordinate()
 
+	def server_signal_handler(self, msg):
+		
+		if msg[0] == "new":
+			self.CmdLayout.update_drone_list(msg)
+		elif msg[0] == "closed":
+			self.CmdLayout.update_drone_list(msg)
+			self.GMapWebView.remove_marker(msg[1])
+		else:
+			self.historyLayout.update_history_display(msg)
 
+	def js_signal_handler(self, msg_):
+
+		msg = str(msg_).split()
+
+		if msg[0] == "marker_click_event":
+			self.statusLayout.update_info_window(msg[1])
+		elif msg[0] == "map_click_event":
+			self.statusLayout.update_coordinate(msg_)
 
 		
 if __name__ == '__main__':

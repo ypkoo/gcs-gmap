@@ -1,4 +1,5 @@
 var map;
+var startLatLng_ADD = {lat: 36.426060, lng: 127.309237}
 var startLatLng = {lat: 36.374092, lng: 127.365638}
 var startLatLng2 = {lat: 36.374383, lng: 127.365327}
 var marker;
@@ -38,7 +39,7 @@ function map_clicked(e) {
 	var lat = latLng.lat();
 	var lng = latLng.lng();
 
-	coordinateUpdater.update(lat, lng);
+	jsCommunicator.emit_signal("map_click_event " + lat + " " + lng);
 }
 
 
@@ -57,23 +58,9 @@ function update_marker(id, lat, lng) {
 		map: map
 	});
 
-	// var infoWindow = new google.maps.InfoWindow({
-	//     content: ""
-	// });
-
-	// marker.addListener('click', function() {
-	// 	infoWindow.open(map, marker);
-	// });
-
-
-	// var infoWindow = new google.maps.InfoWindow({
-	//     content: ""
-	// });
-
-	// marker.addListener('click', function() {
-	// 	infoWindow.open(map, marker);
-	// });
-
+	marker.addListener('click', function() {
+		jsCommunicator.emit_signal("marker_click_event " + id)
+	});
 
 	droneList[idx] = new struct_drone();
 	droneList[idx].marker = marker;
