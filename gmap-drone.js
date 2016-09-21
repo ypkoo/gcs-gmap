@@ -19,7 +19,7 @@ function struct_drone() {
 
 function initMap() {
 	map = new google.maps.Map(document.getElementById('map'), {
-		center: startLatLng,
+		center: startLatLng_ADD,
 		zoom: 19,
 		mapTypeId: google.maps.MapTypeId.HYBRID
 	});

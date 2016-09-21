@@ -566,6 +566,20 @@ class CmdLayout(QVBoxLayout):
 	def is_gcs_location_enabled(self):
 		return self.gcsLocationBtn.isEnabled()
 
+	def set_location(self, lat, lng):
+		self.latText.setText(lat)
+		self.lngText.setText(lng)
+
+	def set_marker(self, droneID):
+		for i in range(self.droneListCombo.count()):
+			if self.droneListCombo.itemText(i) == droneID:
+				self.droneListCombo.setCurrentIndex(i)
+				break
+
+		drone = drone_by_id(droneID)
+		hgt = drone.getLocation[2]
+		self.hgtText.setText(hgt)
+
 
 class HistoryLayout(QVBoxLayout):
 
@@ -787,11 +801,12 @@ class MainFrame(QWidget):
 
 		if msg[0] == "marker_click_event":
 			self.statusLayout.update_info_window(msg[1])
+			self.commandLayout.set_marker(msg[1])
 		elif msg[0] == "map_click_event":
 			if not self.commandLayout.is_gcs_location_enabled():
 				self.commandLayout.gcsLocationBtn.setEnabled(True)
 				self.gmap.mark_gcs_position(msg[1], msg[2])
-			self.statusLayout.update_coordinate(msg_)
+			self.commandLayout.set_location(msg[1], msg[2])
 
 		
 if __name__ == '__main__':
