@@ -16,11 +16,11 @@ import sys
 
 ''' Global variables -------------------------------------------------------'''
 
-HOST    = '127.0.0.1'
+HOST    = '10.10.0.103'
 PORT    = 56789
 ADDR    = (HOST, PORT)
 BUFSIZE = 1024
-PERIOD  = 2000  # msec - send status report request to every drone periodically
+PERIOD  = 1000  # msec - send status report request to every drone periodically
 DEFAULT_SIZE = (800, 700) # default window size
 drone_list = [] # list of the connected drones
 MAC_list = [] # list of the MAC address of all drone clients
@@ -120,6 +120,8 @@ class ServerThread(Thread):
 										self.guiVideoShareHandler(msg)
 									elif msg[1] == 'frame':
 										self.guiFrameHandler()
+									elif msg[1] == 'gohome':
+										self.guiGoHomeHandler(msg)
 									else:
 										LOG('Server', 'error - undefined message: ' + data)
 
@@ -152,6 +154,9 @@ class ServerThread(Thread):
 								output = ('Drone %d: connection closed' % droneID)
 								LOG('Server', output)
 								self.signal.emit(output)
+
+								output2 = ("closed %d" % droneID)
+								self.signal.emit(output2)
 
 							else:
 								output = ('GUI-server connection closed')
@@ -248,6 +253,35 @@ class ServerThread(Thread):
 		output = ('Drone %d landing' % droneID)
 		LOG('Server', output)
 		self.signal.emit(output)
+
+	def guiGoHomeHandler(self, msg):
+		LOG('Server', 'GoHome message')
+
+		droneID = int(msg[2])
+
+		for drone_in_list in drone_list:
+			if drone_in_list.getId() == droneID:
+				break
+		else:
+			LOG('Server', 'cannot find drone ' + str(droneID))
+			return
+
+		droneSocket = drone_in_list.getSocket()
+		message = 'gohome'
+		LOG('Server', 'send a message to drone ' + str(droneID) + ': ' + message)
+		try:
+			droneSocket.send(message + '\t')
+		except Exception, e:
+			LOG('Server', repr(e))
+			droneSocket.shutdown(socket.SHUT_RDWR)
+			connection_list.remove(droneSocket)
+			drone_list.remove(drone_in_list)
+			drone_in_list.__del__()
+			return
+
+		output = ('Drone %d gohome' % droneID)
+		LOG('Server', output)
+		self.signal.emit(output)
 	
 
 	def guiRelocationHandler(self, msg):
@@ -297,6 +331,9 @@ class ServerThread(Thread):
 		output = ('Drone %d: connected' % droneID)
 		LOG('Server', output)
 		self.signal.emit(output)
+
+		output2 = ('new %d' % droneID)
+		self.signal.emit(output2)
 
 	def droneStatusHandler(self, sock, msg):
 		for drone_in_list in drone_list:
@@ -478,7 +515,13 @@ class CmdLayout(QVBoxLayout):
 		goHomeBtn.clicked.connect(self.on_go_home)
 		self.gcsLocationBtn.clicked.connect(self.on_gcs_location)
 
-	def update_drone_list(self, msg):
+	def update_drone_list(self, msg_):
+
+		print "dron update msg: " + str(msg_)
+
+		msg = str(msg_).split()
+
+		droneID = msg[1]
 
 		if msg[0] == "new":
 			self.droneListCombo.addItem(msg[1])
@@ -498,6 +541,7 @@ class CmdLayout(QVBoxLayout):
 			if drone_in_list.getId() == int(droneID):
 				break
 		else:
+			LOG('Launch', 'wrong drone ID')
 			return
 
 		LOG('Command', 'button event - launch')
@@ -519,11 +563,12 @@ class CmdLayout(QVBoxLayout):
 			if drone_in_list.getId() == int(droneID):
 				break
 		else:
+			LOG('Relocation', 'wrong drone ID')
 			return
 
-		lat = self.relocX.latText()
-		lng = self.relocY.lngText()
-		hgt = self.relocZ.hgtText()
+		lat = self.latText.text()
+		lng = self.lngText.text()
+		hgt = self.hgtText.text()
 
 		message = ('gui relocation %s %s %s %s' % (droneID, lat, lng, hgt))
 		LOG('Relocation', 'send a message to the socket server thread: ' + message)
@@ -558,7 +603,25 @@ class CmdLayout(QVBoxLayout):
 			self.__del__()
 
 	def on_go_home(self):
-		pass
+		global drone_list
+		droneID = self.droneListCombo.currentText()
+
+		for drone_in_list in drone_list:
+			if drone_in_list.getId() == int(droneID):
+				break
+		else:
+			return
+
+		message = ('gui gohome %s ' % (droneID))
+		LOG('Go Home', 'send a message to the socket server thread: ' + message)
+
+		try:
+			self.sock.send(message + '\t')
+		except Exception, e:
+			LOG('Go Home', repr(e))
+			self.sock.shutdown(socket.SHUT_RDWR)
+			connection_list.remove(self.sock)
+			self.__del__()
 
 	def on_gcs_location(self):
 		self.gcsLocationBtn.setEnabled(False)
@@ -785,15 +848,18 @@ class MainFrame(QWidget):
 
 		self.gmap.update_gmap()
 
-	def server_signal_handler(self, msg):
+	def server_signal_handler(self, msg_):
+
+
+		msg = str(msg_).split()
 		
 		if msg[0] == "new":
-			self.CmdLayout.update_drone_list(msg)
+			self.commandLayout.update_drone_list(msg_)
 		elif msg[0] == "closed":
-			self.CmdLayout.update_drone_list(msg)
-			self.GMapWebView.remove_marker(msg[1])
+			self.commandLayout.update_drone_list(msg_)
+			self.gmap.remove_marker(msg[1])
 		else:
-			self.historyLayout.update_history_display(msg)
+			self.historyLayout.update_history_display(msg_)
 
 	def js_signal_handler(self, msg_):
 
