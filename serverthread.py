@@ -16,7 +16,7 @@ import sys
 
 ''' Global variables -------------------------------------------------------'''
 
-HOST    = '10.10.0.103'
+HOST    = '127.0.0.1'
 PORT    = 56789
 ADDR    = (HOST, PORT)
 BUFSIZE = 1024
@@ -357,8 +357,6 @@ class Drone:
 	def __del__(self):
 		print 'drone ', self.id, 'class object destroyed'
 
-
-
 """ Customized GUI classes """
 class RelocDialog(QDialog):
 	def __init__(self, sock):
@@ -428,7 +426,6 @@ class RelocDialog(QDialog):
 			connection_list.remove(self.sock)
 			self.__del__()
 		self.close()
-
 
 
 class CmdLayout(QVBoxLayout):
