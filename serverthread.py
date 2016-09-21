@@ -27,7 +27,6 @@ MAC_list = [] # list of the MAC address of all drone clients
 selected_drone = []
 STATUS_OUTPUT = 'select a drone\n'
 droneSize = 30
-curCoordinate = ("0", "0")
 
 minX=0
 minY=0
@@ -40,12 +39,12 @@ def LOG(logger, msg):
 	print str(ctime()) + ' [' + logger + '] ' + msg
 
 # Emitter hack for emitting from non-QObject
-_emitterCache = weakref.WeakKeyDictionary()
+# _emitterCache = weakref.WeakKeyDictionary()
 
-def emitter(ob):
-	if ob not in _emitterCache:
-		_emitterCache[ob] = QObject()
-	return _emitterCache[ob]
+# def emitter(ob):
+# 	if ob not in _emitterCache:
+# 		_emitterCache[ob] = QObject()
+# 	return _emitterCache[ob]
 
 def drone_by_mac(mac):
 	for drone in drone_list:
@@ -114,7 +113,7 @@ class ServerThread(Thread):
 									elif msg[1] == 'launch':
 										self.guiLaunchHandler(msg)
 									elif msg[1] == 'landing':
-										self.guiLandingHandler()
+										self.guiLandingHandler(msg)
 									elif msg[1] == 'relocation':
 										self.guiRelocationHandler(msg)
 									elif msg[1] == 'videoShare':
@@ -221,24 +220,32 @@ class ServerThread(Thread):
 		LOG('Server', output)
 		self.signal.emit(output)
 
-	def guiLandingHandler(self):
+	def guiLandingHandler(self, msg):
 		LOG('Server', 'Landing message')
-		for drone_in_list in drone_list[:]:
-			droneID = drone_in_list.getId()
-			droneSocket = drone_in_list.getSocket()
-			message = 'landing'
-			LOG('Server', 'send a message to drone ' + str(droneID) + ': ' + message)
-			try:
-				droneSocket.send(message + '\t')
-			except Exception, e:
-				LOG('Server', repr(e))
-				droneSocket.shutdown(socket.SHUT_RDWR)
-				connection_list.remove(droneSocket)
-				drone_list.remove(drone_in_list)
-				drone_in_list.__del__()
-				return
 
-		output = ('Drone landing')
+		droneID = int(msg[2])
+
+		for drone_in_list in drone_list:
+			if drone_in_list.getId() == droneID:
+				break
+		else:
+			LOG('Server', 'cannot find drone ' + str(droneID))
+			return
+
+		droneSocket = drone_in_list.getSocket()
+		message = 'landing'
+		LOG('Server', 'send a message to drone ' + str(droneID) + ': ' + message)
+		try:
+			droneSocket.send(message + '\t')
+		except Exception, e:
+			LOG('Server', repr(e))
+			droneSocket.shutdown(socket.SHUT_RDWR)
+			connection_list.remove(droneSocket)
+			drone_list.remove(drone_in_list)
+			drone_in_list.__del__()
+			return
+
+		output = ('Drone %d landing' % droneID)
 		LOG('Server', output)
 		self.signal.emit(output)
 	
@@ -421,16 +428,46 @@ class CmdLayout(QVBoxLayout):
 		launchBtn = QPushButton('Launch')
 		relocBtn = QPushButton('Relocation')
 		landBtn = QPushButton('Land')
+		goHomeBtn = QPushButton('Go Home')
 		self.droneListCombo = QComboBox()
+
+		droneSelectLabel = QLabel('Drone: ')
+		latLabel = QLabel('Lat: ')
+		lngLabel = QLabel('Lng: ')
+		hgtLabel = QLabel('Hgt: ')
+		self.latText = QLineEdit()
+		self.lngText = QLineEdit()
+		self.hgtText = QLineEdit()
+		droneSelectLayout= QHBoxLayout()
+		latLayout = QHBoxLayout()
+		lngLayout = QHBoxLayout()
+		hgtLayout = QHBoxLayout()
+
+		droneSelectLayout.addWidget(droneSelectLabel)
+		droneSelectLayout.addWidget(self.droneListCombo)
+
+		latLayout.addWidget(latLabel)
+		latLayout.addWidget(self.latText)
+
+		lngLayout.addWidget(lngLabel)
+		lngLayout.addWidget(self.lngText)
+
+		hgtLayout.addWidget(hgtLabel)
+		hgtLayout.addWidget(self.hgtText)
 
 		launchLayout = QHBoxLayout()
 		launchLayout.addWidget(self.droneListCombo)
 		launchLayout.addWidget(launchBtn)
 		
 		self.addWidget(commandLabel)
-		self.addLayout(launchLayout)
+		self.addLayout(droneSelectLayout)
+		self.addLayout(latLayout)
+		self.addLayout(lngLayout)
+		self.addLayout(hgtLayout)
+		self.addWidget(launchBtn)
 		self.addWidget(relocBtn)
 		self.addWidget(landBtn)
+		self.addWidget(goHomeBtn)
 
 		launchBtn.clicked.connect(self.on_launch)
 		landBtn.clicked.connect(self.on_landing)
@@ -470,11 +507,50 @@ class CmdLayout(QVBoxLayout):
 			self.__del__()
 
 	def on_relocation(self):
-		relocDialog = RelocDialog(self.sock)
-		relocDialog.exec_()
+		global drone_list
+		droneID = self.droneListCombo.currentText()
+
+		for drone_in_list in drone_list:
+			if drone_in_list.getId() == int(droneID):
+				break
+		else:
+			return
+
+		lat = self.relocX.latText()
+		lng = self.relocY.lngText()
+		hgt = self.relocZ.hgtText()
+
+		message = ('gui relocation %s %s %s %s' % (droneID, lat, lng, hgt))
+		LOG('Relocation', 'send a message to the socket server thread: ' + message)
+
+		try:
+			self.sock.send(message + '\t')
+		except Exception, e:
+			LOG('Relocation', repr(e))
+			self.sock.shutdown(socket.SHUT_RDWR)
+			connection_list.remove(self.sock)
+			self.__del__()
 
 	def on_landing(self):
-		pass
+		global drone_list
+		droneID = self.droneListCombo.currentText()
+
+		for drone_in_list in drone_list:
+			if drone_in_list.getId() == int(droneID):
+				break
+		else:
+			return
+
+		message = ('gui landing %s ' % (droneID))
+		LOG('Landing', 'send a message to the socket server thread: ' + message)
+
+		try:
+			self.sock.send(message + '\t')
+		except Exception, e:
+			LOG('Relocation', repr(e))
+			self.sock.shutdown(socket.SHUT_RDWR)
+			connection_list.remove(self.sock)
+			self.__del__()
 
 
 class HistoryLayout(QVBoxLayout):
@@ -512,30 +588,23 @@ class DroneStatusLayout(QVBoxLayout):
 		# self.timer.start(PERIOD)
 
 
-	def update_drone_list(self):
-		global STATUS_OUTPUT, selected_drone
-		for drone in selected_drone:
-			location = drone.getLocation()
-			STATUS_OUTPUT += ('Drone %d\n- latitude: %s\n- longitude: %s\n- altitude: %s\n' % (drone.getId(), location[0], location[1], location[2]))
+	# def update_drone_list(self):
+	# 	global STATUS_OUTPUT, selected_drone
+	# 	for drone in selected_drone:
+	# 		location = drone.getLocation()
+	# 		STATUS_OUTPUT += ('Drone %d\n- latitude: %s\n- longitude: %s\n- altitude: %s\n' % (drone.getId(), location[0], location[1], location[2]))
 
-		self.statusTextbox.clear()
-		self.statusTextbox.setText(STATUS_OUTPUT)
-		STATUS_OUTPUT = ''
+	# 	self.statusTextbox.clear()
+	# 	self.statusTextbox.setText(STATUS_OUTPUT)
+	# 	STATUS_OUTPUT = ''
 
 	def update_coordinate(self, msg):
-		global curCoordinate
-		self.coordinateTextbox.clear()
-		text = "lat: " + str(curCoordinate[0]) + "\nlng: " + str(curCoordinate[1])
 		self.coordinateTextbox.setText(msg)
 
 	def update_info_window(self, droneID):
-		global drone_list
+		drone = drone_by_id(droneID)
 
-		for drone_in_list in drone_list:
-			if drone_in_list.getId() == int(droneID):
-				break
-
-		infoString = drone_in_list.getLocation()[0]
+		infoString = drone.getLocation()[0]
 
 		self.statusTextbox.setText(infoString)
 
@@ -645,10 +714,10 @@ class MainFrame(QWidget):
 		self.historyLayout = HistoryLayout()
 		self.commandLayout = CmdLayout(self.guiClient)
 
-		self.grid.addWidget(self.gmap, 1, 0, 2, 1)
-		self.grid.addLayout(self.historyLayout, 3, 0)
-		self.grid.addLayout(self.statusLayout, 1, 1, 2, 1)
-		self.grid.addLayout(self.commandLayout, 3, 1)
+		self.grid.addWidget(self.gmap, 0, 0, 5, 10)
+		self.grid.addLayout(self.historyLayout, 5, 0, 2, 10)
+		self.grid.addLayout(self.statusLayout, 0, 10, 5, 3)
+		self.grid.addLayout(self.commandLayout, 5, 10, 2, 3)
 
 		self.setLayout(self.grid)
 
