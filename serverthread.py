@@ -4,7 +4,7 @@ from PyQt4.QtGui import QApplication
 # from PyQt4.QtCore import QUrl, QTimer, QObject, pyqtSignal
 from PyQt4.QtCore import *
 from PyQt4.QtWebKit import QWebView, QWebPage
-from PyQt4.QtGui import QDialog, QComboBox, QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout, QGridLayout, QLineEdit, QWidget, QHeaderView, QPushButton, QTextEdit, QLabel
+from PyQt4.QtGui import QCheckBox, QDialog, QComboBox, QFrame, QSizePolicy, QVBoxLayout, QHBoxLayout, QGridLayout, QLineEdit, QWidget, QHeaderView, QPushButton, QTextEdit, QLabel
 from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest
 
 import select
@@ -429,7 +429,9 @@ class CmdLayout(QVBoxLayout):
 		relocBtn = QPushButton('Relocation')
 		landBtn = QPushButton('Land')
 		goHomeBtn = QPushButton('Go Home')
+		self.gcsLocationBtn = QPushButton('GCS Location set')
 		self.droneListCombo = QComboBox()
+		# self.gcsLocationCheckbox = QCheckBox()
 
 		droneSelectLabel = QLabel('Drone: ')
 		latLabel = QLabel('Lat: ')
@@ -468,10 +470,13 @@ class CmdLayout(QVBoxLayout):
 		self.addWidget(relocBtn)
 		self.addWidget(landBtn)
 		self.addWidget(goHomeBtn)
+		self.addWidget(self.gcsLocationBtn)
 
 		launchBtn.clicked.connect(self.on_launch)
 		landBtn.clicked.connect(self.on_landing)
 		relocBtn.clicked.connect(self.on_relocation)
+		goHomeBtn.clicked.connect(self.on_go_home)
+		self.gcsLocationBtn.clicked.connect(self.on_gcs_location)
 
 	def update_drone_list(self, msg):
 
@@ -551,6 +556,15 @@ class CmdLayout(QVBoxLayout):
 			self.sock.shutdown(socket.SHUT_RDWR)
 			connection_list.remove(self.sock)
 			self.__del__()
+
+	def on_go_home(self):
+		pass
+
+	def on_gcs_location(self):
+		self.gcsLocationBtn.setEnabled(False)
+
+	def is_gcs_location_enabled(self):
+		return self.gcsLocationBtn.isEnabled()
 
 
 class HistoryLayout(QVBoxLayout):
@@ -691,6 +705,10 @@ class GMapWebView(QWebView):
 
 		return ret
 
+	def mark_gcs_position(self, lat, lng):
+		self.frame.evaluateJavaScript('mark_gcs_position(%s, %s)' % (lat, lng))
+		print lat, lng
+
 
 class MainFrame(QWidget):
 
@@ -770,6 +788,9 @@ class MainFrame(QWidget):
 		if msg[0] == "marker_click_event":
 			self.statusLayout.update_info_window(msg[1])
 		elif msg[0] == "map_click_event":
+			if not self.commandLayout.is_gcs_location_enabled():
+				self.commandLayout.gcsLocationBtn.setEnabled(True)
+				self.gmap.mark_gcs_position(msg[1], msg[2])
 			self.statusLayout.update_coordinate(msg_)
 
 		

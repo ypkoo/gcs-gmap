@@ -5,6 +5,7 @@ var startLatLng2 = {lat: 36.374383, lng: 127.365327}
 var marker;
 var droneList = [];
 var lineList = [];
+var gcs_marker;
 
 var lineSymbol = {
 	path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW
@@ -26,12 +27,11 @@ function initMap() {
 	// var image = 'images/drone.png';
 	map.addListener('click', map_clicked);
 
-
-	//test marker
-	// var marker = new google.maps.Marker({
-	// 	position: startLatLng,
-	// 	map: map
-	// });
+	// test marker
+	gcs_marker = new google.maps.Marker({
+		position: startLatLng,
+		icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+	});
 }
 
 function map_clicked(e) {
@@ -124,4 +124,10 @@ function remove_all_lines() {
 	}
 
 	lineList = [];
+}
+
+
+function mark_gcs_position(lat, lng) {
+	gcs_marker.setPosition({lat: lat, lng: lng});
+	gcs_marker.setMap(map);
 }
