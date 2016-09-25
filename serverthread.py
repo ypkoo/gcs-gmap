@@ -671,8 +671,8 @@ class DroneStatusLayout(QVBoxLayout):
 		self.coordinateTextbox.setReadOnly(True)
 		self.addWidget(self.statusLabel)
 		self.addWidget(self.statusTextbox, 2)
-		self.addWidget(self.coordinateLabel)
-		self.addWidget(self.coordinateTextbox, 1)
+		# self.addWidget(self.coordinateLabel)
+		# self.addWidget(self.coordinateTextbox, 1)
 
 		# self.timer = QTimer()
 		# self.timer.timeout.connect(self.update_drone_list)
@@ -692,10 +692,20 @@ class DroneStatusLayout(QVBoxLayout):
 	def update_coordinate(self, msg):
 		self.coordinateTextbox.setText(msg)
 
-	def update_info_window(self, droneID):
+	def update_info_window(self, droneID, dist):
 		drone = drone_by_id(droneID)
 
-		infoString = drone.getLocation()[0]
+		if drone != None:
+			location = drone.getLocation()
+			infoString = """
+id: %s
+lat: %s
+lng: %s
+hgt: %s
+from gcs: %sm
+		""" % (droneID, location[0], location[1], location[2], dist)
+		else:
+			infoString = "Drone %s does not exist." % droneID
 
 		self.statusTextbox.setText(infoString)
 
@@ -866,8 +876,9 @@ class MainFrame(QWidget):
 		msg = str(msg_).split()
 
 		if msg[0] == "marker_click_event":
-			self.statusLayout.update_info_window(msg[1])
+			self.statusLayout.update_info_window(msg[1], msg[2])
 			self.commandLayout.set_marker(msg[1])
+
 		elif msg[0] == "map_click_event":
 			if not self.commandLayout.is_gcs_location_enabled():
 				self.commandLayout.gcsLocationBtn.setEnabled(True)

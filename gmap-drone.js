@@ -5,7 +5,7 @@ var startLatLng2 = {lat: 36.374383, lng: 127.365327}
 var marker;
 var droneList = [];
 var lineList = [];
-var gcs_marker;
+var gcsMarker;
 
 var lineSymbol = {
 	path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW
@@ -28,10 +28,37 @@ function initMap() {
 	map.addListener('click', map_clicked);
 
 	// test marker
-	gcs_marker = new google.maps.Marker({
+	gcsMarker = new google.maps.Marker({
 		position: startLatLng,
-		icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png'
+		icon: 'http://maps.google.com/mapfiles/ms/icons/green-dot.png',
+		// label: 'G'
 	});
+
+
+
+	var test_marker = new google.maps.Marker({
+		position: startLatLng,
+		// icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+		map: map,
+		label: '1'
+	});
+
+
+	test_marker.addListener('click', function() {
+
+		markerPos = test_marker.getPosition()
+		gcsPos = gcsMarker.getPosition()
+
+		if (gcsMarker.getMap() != null) {
+			dist = google.maps.geometry.spherical.computeDistanceBetween (markerPos, gcsPos);
+		}
+		else {
+			dist = "no_gcs_position";
+		}
+
+		jsCommunicator.emit_signal("marker_click_event " + '1' + " " + dist);
+	});
+
 }
 
 function map_clicked(e) {
@@ -58,12 +85,25 @@ function update_marker(id, lat, lng) {
 	// new drone
 	var marker = new google.maps.Marker({
 		position: {lat: lat, lng: lng},
-		map: map
+		// icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
+		map: map,
+		label: id
 	});
 
 
 	marker.addListener('click', function() {
-		jsCommunicator.emit_signal("marker_click_event " + id)
+		markerPos = marker.getPosition()
+		gcsPos = gcsMarker.getPosition()
+
+		if (gcsMarker.getMap() != null) {
+			dist = google.maps.geometry.spherical.computeDistanceBetween ({lat: lat1, lng: lng1}, {lat: lat2, lng: lng2});
+		}
+		else {
+			dist = "no_gcs_position";
+		}
+		
+
+		jsCommunicator.emit_signal("marker_click_event " + id + " " + dist);
 	});
 
 	droneList[idx] = new struct_drone();
@@ -71,6 +111,7 @@ function update_marker(id, lat, lng) {
 	droneList[idx].id = id;
 	// droneList[idx].infoWindow = infoWindow;
 }
+
 
 function remove_marker(id) {
 
@@ -134,6 +175,10 @@ function remove_all_lines() {
 
 
 function mark_gcs_position(lat, lng) {
-	gcs_marker.setPosition({lat: lat, lng: lng});
-	gcs_marker.setMap(map);
+	gcsMarker.setPosition({lat: lat, lng: lng});
+	gcsMarker.setMap(map);
+}
+
+function distance(lat1, lng1, lat2, lng2) {
+	return google.maps.geometry.spherical.computeDistanceBetween ({lat: lat1, lng: lng1}, {lat: lat2, lng: lng2});
 }
