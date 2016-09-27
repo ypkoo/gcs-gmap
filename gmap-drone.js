@@ -2,6 +2,7 @@ var map;
 var startLatLng_ADD = {lat: 36.426060, lng: 127.309237}
 var startLatLng = {lat: 36.374092, lng: 127.365638}
 var startLatLng2 = {lat: 36.374383, lng: 127.365327}
+var startLatLng_DJI = {lat: 22.542813, lng: 113.958902}
 var marker;
 var droneList = [];
 var lineList = [];
@@ -19,7 +20,7 @@ function struct_drone() {
 
 function initMap() {
 	map = new google.maps.Map(document.getElementById('map'), {
-		center: startLatLng,
+		center: startLatLng_DJI,
 		zoom: 19,
 		mapTypeId: google.maps.MapTypeId.HYBRID
 	});
@@ -37,7 +38,7 @@ function initMap() {
 
 
 	var test_marker = new google.maps.Marker({
-		position: startLatLng,
+		position: startLatLng2,
 		// icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
 		map: map,
 		label: '1'
@@ -96,7 +97,7 @@ function update_marker(id, lat, lng) {
 		gcsPos = gcsMarker.getPosition()
 
 		if (gcsMarker.getMap() != null) {
-			dist = google.maps.geometry.spherical.computeDistanceBetween (markerPos, gcsPos);
+			dist = google.maps.geometry.spherical.computeDistanceBetween(markerPos, gcsPos);
 		}
 		else {
 			dist = "no_gcs_position";

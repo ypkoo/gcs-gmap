@@ -10,12 +10,12 @@ from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest
 import select
 import socket
 from threading import Thread
-from time import ctime
+from time import ctime, sleep
 import sys
 
 ''' Global variables -------------------------------------------------------'''
 
-HOST    = '127.0.0.1'
+HOST    = '10.10.0.111'
 PORT    = 56789
 ADDR    = (HOST, PORT)
 BUFSIZE = 1024
@@ -148,6 +148,7 @@ class ServerThread(Thread):
 
 							connection_list.remove(sock)
 							sock.close()
+				sleep(0.5)
 
 		except Exception, e:
 			LOG('Server', repr(e))
@@ -370,75 +371,6 @@ class Drone:
 		print 'drone ', self.id, 'class object destroyed'
 
 """ Customized GUI classes """
-class RelocDialog(QDialog):
-	def __init__(self, sock):
-		super(RelocDialog, self).__init__()
-
-		self.sock = sock
-
-		relocLayout = QGridLayout()
-		labelX = QLabel('X')
-		labelY = QLabel('Y')
-		labelZ = QLabel('Z')
-		labelDrone = QLabel('Drone')
-		self.relocX = QLineEdit()
-		self.relocY = QLineEdit()
-		self.relocZ = QLineEdit()
-		self.droneListCombo = QComboBox()
-		okBtn = QPushButton('OK')
-
-
-
-		global drone_list
-		for drone in drone_list:
-			self.droneListCombo.addItem(str(drone.getId()))
-			print drone.getId()
-
-		global curCoordinate
-		self.relocX.setText(curCoordinate[0])
-		self.relocY.setText(curCoordinate[1])
-
-		relocLayout.addWidget(labelX, 1, 0)
-		relocLayout.addWidget(self.relocX, 1, 1)
-		relocLayout.addWidget(labelY, 2, 0)
-		relocLayout.addWidget(self.relocY, 2, 1)
-		relocLayout.addWidget(labelZ, 3, 0)
-		relocLayout.addWidget(self.relocZ, 3, 1)
-		relocLayout.addWidget(labelDrone, 4, 0)
-		relocLayout.addWidget(self.droneListCombo, 4, 1)
-		relocLayout.addWidget(okBtn, 5, 0, 1, 2)
-
-		okBtn.clicked.connect(self.on_ok)
-
-		self.setLayout(relocLayout)
-
-	def on_ok(self):
-		global drone_list
-		droneID = self.droneListCombo.currentText()
-
-		for drone_in_list in drone_list:
-			if drone_in_list.getId() == int(droneID):
-				break
-		else:
-			return
-
-		x = self.relocX.text()
-		y = self.relocY.text()
-		z = self.relocZ.text()
-
-		message = ('gui relocation %s %s %s %s' % (droneID, x, y, z))
-		LOG('Relocation', 'send a message to the socket server thread: ' + message)
-
-		try:
-			self.sock.send(message + '\t')
-		except Exception, e:
-			LOG('Relocation', repr(e))
-			self.sock.shutdown(socket.SHUT_RDWR)
-			connection_list.remove(self.sock)
-			self.__del__()
-		self.close()
-
-
 class CmdLayout(QVBoxLayout):
 	def __init__(self, sock):
 		super(CmdLayout, self).__init__()
@@ -621,7 +553,7 @@ class CmdLayout(QVBoxLayout):
 				self.droneListCombo.setCurrentIndex(i)
 				break
 
-		drone = drone_by_id(droneID)
+		drone = drone_by_id(int(droneID))
 		hgt = drone.getLocation[2]
 		self.hgtText.setText(hgt)
 
@@ -655,19 +587,32 @@ class DroneStatusLayout(QVBoxLayout):
 	def update_coordinate(self, msg):
 		self.coordinateTextbox.setText(msg)
 
-	def update_info_window(self, droneID, dist):
-		drone = drone_by_id(droneID)
+	def update_info_window(self, droneID, dist_):
+
+		drone = drone_by_id(int(droneID))
+
+		if dist_ == "no_gcs_position":
+			dist = "no gcs position"
+		else:
+			dist_split = dist_.split(".")
+			dist = dist_split[0] + "." + dist_split[1][:4]
+
+		maclist = ""
+		for mac in drone.neighborList:
+			maclist = maclist + mac
 
 		if drone != None:
 			location = drone.getLocation()
-			infoString = """
-id: %s
+			infoString = """id: %s
+
 lat: %s
 lng: %s
 hgt: %s
+
 from gcs: %sm
-neighbors: 
-		""" % (droneID, location[0], location[1], location[2], dist)
+
+neighbors: %s
+		""" % (droneID, location[0], location[1], location[2], dist, maclist)
 		else:
 			infoString = "Drone %s does not exist." % droneID
 
@@ -727,7 +672,7 @@ class GMapWebView(QWebView):
 
 
 	def update_marker(self, droneID, location, infoString):
-		self.frame.evaluateJavaScript('update_marker(%s, %s, %s);' % (droneID, location[0], location[1]))
+		self.frame.evaluateJavaScript('update_marker(%s, %s, %s);' % (str(droneID), location[0], location[1]))
 
 	def remove_marker(self, droneID):
 		self.frame.evaluateJavaScript('remove_marker(%s);' % (droneID))
@@ -838,6 +783,7 @@ class MainFrame(QWidget):
 		msg = str(msg_).split()
 
 		if msg[0] == "marker_click_event":
+			print str(msg_)
 			self.statusLayout.update_info_window(msg[1], msg[2])
 			self.commandLayout.set_marker(msg[1])
 

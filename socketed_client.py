@@ -251,7 +251,9 @@ class ClientThread(Thread):
 				neighborMac_ = batctlOut.split("\n")[2:-1]
 				neighborMac = ""
 				for i in neighborMac_:
-					neighborMac = neighborMac + i.split(" ")[0] + " "
+					i_split = i.split(" ")
+					if i_split[0] == i_split[3]:
+						neighborMac = neighborMac + i_split[0] + " "
 					
 				try:
 					print ' 	trying to recv'
