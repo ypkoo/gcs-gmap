@@ -192,12 +192,12 @@ class ClientThread(Thread):
 
 		while KEEP_CONNECT:
 			try:
-				connect()
+				self.connect()
 				break
 			except Exception, e:
 				LOG('Client', repr(e))
 				LOG('Client', 'try to reconnect...')
-				connect()
+				self.connect()
 
 			sleep(1)
 
