@@ -38,7 +38,7 @@ def drone_by_mac(mac):
 
 def drone_by_id(id_):
 	for drone in drone_list:
-		if drone.getId() == id_:
+		if drone.getId() == int(id_):
 			return drone
 
 	return None
@@ -554,9 +554,9 @@ class CmdLayout(QVBoxLayout):
 				self.droneListCombo.setCurrentIndex(i)
 				break
 
-		drone = drone_by_id(int(droneID))
-		hgt = drone.getLocation[2]
-		self.hgtText.setText(hgt)
+		drone = drone_by_id(droneID)
+		hgt = drone.getLocation()[2]
+		self.hgtText.setText(str(hgt))
 
 
 class HistoryLayout(QVBoxLayout):
@@ -588,7 +588,7 @@ class DroneStatusLayout(QVBoxLayout):
 		self.coordinateTextbox.setText(msg)
 
 	def update_info_window(self, droneID, dist_):
-		drone = drone_by_id(int(droneID))
+		drone = drone_by_id(droneID)
 
 		if dist_ == "no_gcs_position":
 			dist = "no gcs position"
@@ -671,11 +671,9 @@ class GMapWebView(QWebView):
 				nbrDrone = drone_by_mac(neighbor)
 
 				if nbrDrone != None:
-					print "nbr found: " + str(nbrDrone.getMAC())
 					self.draw_line(drone.getLocation(), nbrDrone.getLocation())
 				else:
-					print "		drone by mac none"
-
+					pass
 
 	def update_marker(self, droneID, location, infoString):
 		self.frame.evaluateJavaScript('update_marker(%s, %s, %s);' % (str(droneID), location[0], location[1]))
@@ -789,7 +787,6 @@ class MainFrame(QWidget):
 		msg = str(msg_).split()
 
 		if msg[0] == "marker_click_event":
-			print str(msg_)
 			self.statusLayout.update_info_window(msg[1], msg[2])
 			self.commandLayout.set_marker(msg[1])
 
