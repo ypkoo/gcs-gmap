@@ -206,13 +206,23 @@ class ClientThread(Thread):
 				self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				LOG('Client', 'try to access to server')
 				self.socket.connect(ADDR)
+
 				print '		print1'
 				break
 			except Exception, e:
 				LOG('Client', repr(e))
 				LOG('Client', 'try to reconnect...')
 
-			
+	def register(self):
+		batctlOut = subprocess.Popen(["sudo batctl o"], stdout=subprocess.PIPE, shell=True).communicate()[0]
+		grepOut = subprocess.Popen(["grep '(bat0'"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=True).communicate(input=batctlOut)[0]
+		selfMac = subprocess.Popen(["awk '{print $5}'"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=True).communicate(input=grepOut)[0]
+		selfMac = selfMac.split('\n')
+		selfMac.pop()
+		selfMac = selfMac[0][6:]
+
+		LOG('Client', 'send drone registration request to server')
+		self.socket.send('drone new %s\t' %(selfMac))
 
 
 	def run(self):
@@ -232,7 +242,7 @@ class ClientThread(Thread):
 		except Exception, e:
 			LOG('Client', repr(e))
 			self.connect()
-				
+		
 
 
 		while True:
@@ -252,6 +262,7 @@ class ClientThread(Thread):
 				if not data:
 					LOG('Client', 'the end of connection')
 					self.connect()
+					self.register()
 					continue
 
 				LOG('Client', 'received message from server: ' + data)
@@ -320,6 +331,7 @@ class ClientThread(Thread):
 			except Exception, e:
 				LOG('Client', repr(e))
 				self.connect()
+				self.register()
 				print '		exception e asdlkfja;lskdjf;laks'
 
 ''' main start '''
