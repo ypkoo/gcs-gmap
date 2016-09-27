@@ -190,27 +190,26 @@ class ClientThread(Thread):
 		# 	LOG('Client', repr(e))
 		# 	return
 
+		self.connect()		
+
+
+	def connect(self):
+		# if self.socket:
+		# 	self.socket.close()
 		while KEEP_CONNECT:
+			sleep(1)
 			try:
-				self.connect()
+				LOG('Client', 'create socket')
+				self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+				LOG('Client', 'try to access to server')
+				self.socket.connect(ADDR)
 				print '		print1'
 				break
 			except Exception, e:
 				LOG('Client', repr(e))
 				LOG('Client', 'try to reconnect...')
 
-			sleep(1)
-
-
-	def connect(self):
-		# if self.socket:
-		# 	self.socket.close()
-		global ADDR
-		LOG('Client', 'create socket')
-		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		LOG('Client', 'try to access to server')
-		self.socket.connect(ADDR)
-		print '		print2'
+			
 
 
 	def run(self):
@@ -227,15 +226,7 @@ class ClientThread(Thread):
 			self.socket.send('drone new %s\t' %(selfMac))
 		except Exception, e:
 			LOG('Client', repr(e))
-			while KEEP_CONNECT:
-				try:
-					self.connect()
-					break
-				except Exception, e:
-					LOG('Client', repr(e))
-					LOG('Client', 'try to reconnect...')
-
-				sleep(1)
+			self.connect()
 				
 
 
@@ -254,15 +245,7 @@ class ClientThread(Thread):
 
 				if not data:
 					LOG('Client', 'the end of connection')
-					while KEEP_CONNECT:
-						try:
-							self.connect()
-							break
-						except Exception, e:
-							LOG('Client', repr(e))
-							LOG('Client', 'try to reconnect...')
-
-						sleep(1)
+					self.connect()
 					continue
 
 				LOG('Client', 'received message from server: ' + data)
@@ -330,15 +313,7 @@ class ClientThread(Thread):
 
 			except Exception, e:
 				LOG('Client', repr(e))
-				while KEEP_CONNECT:
-					try:
-						self.connect()
-						break
-					except Exception, e:
-						LOG('Client', repr(e))
-						LOG('Client', 'try to reconnect...')
-
-					sleep(1)
+				self.connect()
 
 ''' main start '''
 if __name__ == '__main__':
