@@ -233,7 +233,7 @@ class ClientThread(Thread):
 					connect()
 
 				sleep(1)
-			continue
+				
 
 
 		while True:
@@ -340,7 +340,7 @@ class ClientThread(Thread):
 					sleep(1)
 
 ''' main start '''
-if __name__ = '__main__':
+if __name__ == '__main__':
 
 	psOut = subprocess.Popen(["ps -al"], stdout=subprocess.PIPE, shell=True).communicate()[0]
 	grepOut = subprocess.Popen(["grep 'roslaunch'"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=True).communicate(input=psOut)[0]
