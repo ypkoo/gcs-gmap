@@ -191,6 +191,7 @@ class ClientThread(Thread):
 		# 	return
 
 		self.connect()		
+		print '		init done'
 
 
 	def connect(self):
@@ -213,6 +214,8 @@ class ClientThread(Thread):
 
 
 	def run(self):
+
+		print '		run start'
 
 		batctlOut = subprocess.Popen(["sudo batctl o"], stdout=subprocess.PIPE, shell=True).communicate()[0]
 		grepOut = subprocess.Popen(["grep '(bat0'"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=True).communicate(input=batctlOut)[0]
