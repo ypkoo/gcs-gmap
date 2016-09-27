@@ -196,8 +196,9 @@ class ClientThread(Thread):
 		self.run()
 
 	def connect(self):
-		# if self.socket:
-		# 	self.socket.close()
+		if self.socket:
+			self.socket.shutdown()
+			self.socket.close()
 		while KEEP_CONNECT:
 			sleep(1)
 			try:
