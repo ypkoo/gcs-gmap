@@ -225,12 +225,12 @@ class ClientThread(Thread):
 			LOG('Client', repr(e))
 			while KEEP_CONNECT:
 				try:
-					connect()
+					self.connect()
 					break
 				except Exception, e:
 					LOG('Client', repr(e))
 					LOG('Client', 'try to reconnect...')
-					connect()
+					self.connect()
 
 				sleep(1)
 				
@@ -253,12 +253,12 @@ class ClientThread(Thread):
 					LOG('Client', 'the end of connection')
 					while KEEP_CONNECT:
 						try:
-							connect()
+							self.connect()
 							break
 						except Exception, e:
 							LOG('Client', repr(e))
 							LOG('Client', 'try to reconnect...')
-							connect()
+							self.connect()
 
 						sleep(1)
 					continue
@@ -330,12 +330,12 @@ class ClientThread(Thread):
 				LOG('Client', repr(e))
 				while KEEP_CONNECT:
 					try:
-						connect()
+						self.connect()
 						break
 					except Exception, e:
 						LOG('Client', repr(e))
 						LOG('Client', 'try to reconnect...')
-						connect()
+						self.connect()
 
 					sleep(1)
 
