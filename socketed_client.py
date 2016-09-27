@@ -247,7 +247,7 @@ class ClientThread(Thread):
 				try:
 					data = self.socket.recv(BUFSIZE)
 				except KeyboardInterrupt:
-					return
+					pass
 
 				if not data:
 					LOG('Client', 'the end of connection')

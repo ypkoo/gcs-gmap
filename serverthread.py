@@ -9,7 +9,6 @@ from PyQt4.QtNetwork import QNetworkAccessManager, QNetworkRequest
 
 import select
 import socket
-import weakref
 from threading import Thread
 from time import ctime
 import sys
@@ -21,30 +20,14 @@ PORT    = 56789
 ADDR    = (HOST, PORT)
 BUFSIZE = 1024
 PERIOD  = 1000  # msec - send status report request to every drone periodically
-DEFAULT_SIZE = (800, 700) # default window size
 drone_list = [] # list of the connected drones
 MAC_list = [] # list of the MAC address of all drone clients
 selected_drone = []
 STATUS_OUTPUT = 'select a drone\n'
 droneSize = 30
 
-minX=0
-minY=0
-maxX=0
-maxY=0
-dcWidth=0
-dcHeight=0
-
 def LOG(logger, msg):
 	print str(ctime()) + ' [' + logger + '] ' + msg
-
-# Emitter hack for emitting from non-QObject
-# _emitterCache = weakref.WeakKeyDictionary()
-
-# def emitter(ob):
-# 	if ob not in _emitterCache:
-# 		_emitterCache[ob] = QObject()
-# 	return _emitterCache[ob]
 
 def drone_by_mac(mac):
 	for drone in drone_list:
@@ -468,7 +451,6 @@ class CmdLayout(QVBoxLayout):
 		goHomeBtn = QPushButton('Go Home')
 		self.gcsLocationBtn = QPushButton('GCS Location set')
 		self.droneListCombo = QComboBox()
-		# self.gcsLocationCheckbox = QCheckBox()
 
 		droneSelectLabel = QLabel('Drone: ')
 		latLabel = QLabel('Lat: ')
@@ -667,27 +649,8 @@ class DroneStatusLayout(QVBoxLayout):
 		self.coordinateLabel = QLabel('Coornidate')
 		self.statusTextbox = QTextEdit()
 		self.statusTextbox.setReadOnly(True)
-		self.coordinateTextbox = QTextEdit()
-		self.coordinateTextbox.setReadOnly(True)
 		self.addWidget(self.statusLabel)
 		self.addWidget(self.statusTextbox, 2)
-		# self.addWidget(self.coordinateLabel)
-		# self.addWidget(self.coordinateTextbox, 1)
-
-		# self.timer = QTimer()
-		# self.timer.timeout.connect(self.update_drone_list)
-		# self.timer.start(PERIOD)
-
-
-	# def update_drone_list(self):
-	# 	global STATUS_OUTPUT, selected_drone
-	# 	for drone in selected_drone:
-	# 		location = drone.getLocation()
-	# 		STATUS_OUTPUT += ('Drone %d\n- latitude: %s\n- longitude: %s\n- altitude: %s\n' % (drone.getId(), location[0], location[1], location[2]))
-
-	# 	self.statusTextbox.clear()
-	# 	self.statusTextbox.setText(STATUS_OUTPUT)
-	# 	STATUS_OUTPUT = ''
 
 	def update_coordinate(self, msg):
 		self.coordinateTextbox.setText(msg)
@@ -703,6 +666,7 @@ lat: %s
 lng: %s
 hgt: %s
 from gcs: %sm
+neighbors: 
 		""" % (droneID, location[0], location[1], location[2], dist)
 		else:
 			infoString = "Drone %s does not exist." % droneID
@@ -764,7 +728,6 @@ class GMapWebView(QWebView):
 
 	def update_marker(self, droneID, location, infoString):
 		self.frame.evaluateJavaScript('update_marker(%s, %s, %s);' % (droneID, location[0], location[1]))
-		# self.frame.evaluateJavaScript('test_func()')
 
 	def remove_marker(self, droneID):
 		self.frame.evaluateJavaScript('remove_marker(%s);' % (droneID))
@@ -773,7 +736,6 @@ class GMapWebView(QWebView):
 		self.frame.evaluateJavaScript('remove_all_markers();')
 
 	def draw_line(self, start, end):
-		# print " ".join([str(start[0]), start[1], end[0], end[1]])
 		self.frame.evaluateJavaScript('draw_line(%s, %s, %s, %s);' % (start[0], start[1], end[0], end[1]))
 
 	def remove_all_lines(self):
