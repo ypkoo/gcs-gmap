@@ -244,6 +244,7 @@ class ClientThread(Thread):
 					neighborMac = neighborMac + i.split(" ")[0] + " "
 					
 				try:
+					print ' 	trying to recv'
 					data = self.socket.recv(BUFSIZE)
 				except KeyboardInterrupt:
 					return
@@ -319,6 +320,7 @@ class ClientThread(Thread):
 			except Exception, e:
 				LOG('Client', repr(e))
 				self.connect()
+				print '		exception e asdlkfja;lskdjf;laks'
 
 ''' main start '''
 if __name__ == '__main__':
