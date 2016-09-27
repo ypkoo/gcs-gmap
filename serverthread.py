@@ -74,6 +74,7 @@ class ServerThread(Thread):
 					# a new client
 					if sock == self.socket:
 						client, addr = self.socket.accept()
+						client.settimeout(10)
 						connection_list.append(client)
 						idx = connection_list.index(client) - 1
 						LOG('Server', 'a new client ' + str(idx) + ' is connected')
@@ -559,7 +560,6 @@ class CmdLayout(QVBoxLayout):
 
 
 class HistoryLayout(QVBoxLayout):
-
 	def __init__(self):
 		super(HistoryLayout, self).__init__()
 		historyLabel = QLabel('history')
@@ -588,18 +588,25 @@ class DroneStatusLayout(QVBoxLayout):
 		self.coordinateTextbox.setText(msg)
 
 	def update_info_window(self, droneID, dist_):
-
 		drone = drone_by_id(int(droneID))
 
 		if dist_ == "no_gcs_position":
 			dist = "no gcs position"
 		else:
 			dist_split = dist_.split(".")
-			dist = dist_split[0] + "." + dist_split[1][:4]
+			dist = dist_split[0] + "." + dist_split[1][:4] + "m"
 
-		maclist = ""
+		droneNbrList = ""
+		clientList = ""
 		for mac in drone.neighborList:
-			maclist = maclist + mac
+			if drone_by_mac(mac) != None:
+				droneNbrList = droneNbrList + mac + "\n"
+			else:
+				clientList = clientList + mac + "\n"
+
+		if clientList == "":
+			clientList = "No client"
+
 
 		if drone != None:
 			location = drone.getLocation()
@@ -609,10 +616,11 @@ lat: %s
 lng: %s
 hgt: %s
 
-from gcs: %sm
+from gcs: %s
 
 neighbors: %s
-		""" % (droneID, location[0], location[1], location[2], dist, maclist)
+clients: %s
+		""" % (droneID, location[0], location[1], location[2], dist, droneNbrList, clientList)
 		else:
 			infoString = "Drone %s does not exist." % droneID
 
@@ -656,11 +664,9 @@ class GMapWebView(QWebView):
 
 		for drone in drone_list:
 			self.remove_all_lines()
-			maclist = ""
-			for mac in drone.neighborList:
-				maclist = maclist + mac
 
 			for neighbor in drone.neighborList:
+				print "		naver: " + neighbor
 
 				nbrDrone = drone_by_mac(neighbor)
 
