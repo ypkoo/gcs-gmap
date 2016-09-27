@@ -191,8 +191,6 @@ class ClientThread(Thread):
 		# 	return
 
 		self.connect()		
-		print '		init done'
-
 		self.run()
 
 	def connect(self):
@@ -206,14 +204,13 @@ class ClientThread(Thread):
 				self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 				LOG('Client', 'try to access to server')
 				self.socket.connect(ADDR)
-
-				print '		print1'
 				break
+			except KeyboardInterrupt:
+				return
 			except Exception, e:
 				LOG('Client', repr(e))
 				LOG('Client', 'try to reconnect...')
-			except KeyboardInterrupt:
-				return
+			
 
 	def register(self):
 		batctlOut = subprocess.Popen(["sudo batctl o"], stdout=subprocess.PIPE, shell=True).communicate()[0]
@@ -229,8 +226,6 @@ class ClientThread(Thread):
 
 	def run(self):
 
-		print '		run start'
-
 		batctlOut = subprocess.Popen(["sudo batctl o"], stdout=subprocess.PIPE, shell=True).communicate()[0]
 		grepOut = subprocess.Popen(["grep '(bat0'"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=True).communicate(input=batctlOut)[0]
 		selfMac = subprocess.Popen(["awk '{print $5}'"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=True).communicate(input=grepOut)[0]
@@ -241,6 +236,8 @@ class ClientThread(Thread):
 		LOG('Client', 'send drone registration request to server')
 		try:
 			self.socket.send('drone new %s\t' %(selfMac))
+		except KeyboardInterrupt:
+				return
 		except Exception, e:
 			LOG('Client', repr(e))
 			self.connect()
@@ -289,6 +286,8 @@ class ClientThread(Thread):
 						print "report: " + report
 						try:
 							self.socket.send(report + '\t')
+						except KeyboardInterrupt:
+							return
 						except Exception, e:
 							LOG('Client', repr(e))
 							self.socket.shutdown(socket.SHUT_RDWR)
@@ -334,6 +333,9 @@ class ClientThread(Thread):
 
 					else:
 						print data
+
+			except KeyboardInterrupt:
+				return
 
 			except Exception, e:
 				LOG('Client', repr(e))
