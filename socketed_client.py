@@ -193,6 +193,7 @@ class ClientThread(Thread):
 		self.connect()		
 		print '		init done'
 
+		self.run()
 
 	def connect(self):
 		# if self.socket:
