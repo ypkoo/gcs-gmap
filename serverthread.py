@@ -81,6 +81,7 @@ class ServerThread(Thread):
 						
 					# existing client
 					else:
+
 						data = sock.recv(BUFSIZE)
 						idx = connection_list.index(sock) - 1
 
@@ -666,8 +667,6 @@ class GMapWebView(QWebView):
 			self.remove_all_lines()
 
 			for neighbor in drone.neighborList:
-				print "		naver: " + neighbor
-
 				nbrDrone = drone_by_mac(neighbor)
 
 				if nbrDrone != None:
