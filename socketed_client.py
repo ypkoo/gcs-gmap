@@ -251,7 +251,8 @@ class ClientThread(Thread):
 				neighborMac_ = batctlOut.split("\n")[2:-1]
 				neighborMac = ""
 				for i in neighborMac_:
-					i_split = i.split(" ")
+					i_split = i.split()
+
 					if i_split[0] == i_split[3]:
 						neighborMac = neighborMac + i_split[0] + " "
 
