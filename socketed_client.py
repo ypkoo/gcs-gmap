@@ -174,7 +174,7 @@ class ClientThread(Thread):
 
 		Thread.__init__(self)
 
-		self.socket = ""
+		self.socket = None
 
 		# try:
 		# 	LOG('Client', 'create socket')
