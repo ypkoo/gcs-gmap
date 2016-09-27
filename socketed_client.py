@@ -212,6 +212,8 @@ class ClientThread(Thread):
 			except Exception, e:
 				LOG('Client', repr(e))
 				LOG('Client', 'try to reconnect...')
+			except KeyboardInterrupt:
+				return
 
 	def register(self):
 		batctlOut = subprocess.Popen(["sudo batctl o"], stdout=subprocess.PIPE, shell=True).communicate()[0]
