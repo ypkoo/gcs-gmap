@@ -4,7 +4,7 @@
 import socket
 import subprocess
 from threading import Thread
-from time import ctime
+from time import ctime, sleep
 import threading
 
 from dji_sdk.dji_drone import DJIDrone
