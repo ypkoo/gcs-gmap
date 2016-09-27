@@ -193,6 +193,7 @@ class ClientThread(Thread):
 		while KEEP_CONNECT:
 			try:
 				self.connect()
+				print '		print1'
 				break
 			except Exception, e:
 				LOG('Client', repr(e))
@@ -209,6 +210,7 @@ class ClientThread(Thread):
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		LOG('Client', 'try to access to server')
 		self.socket.connect(ADDR)
+		print '		print2'
 
 
 	def run(self):
