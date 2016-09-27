@@ -174,6 +174,7 @@ class ClientThread(Thread):
 
 		Thread.__init__(self)
 
+		self.setDaemon(True)
 		self.socket = None
 
 		# try:
@@ -206,7 +207,7 @@ class ClientThread(Thread):
 				self.socket.connect(ADDR)
 				break
 			except KeyboardInterrupt:
-				return
+				break
 			except Exception, e:
 				LOG('Client', repr(e))
 				LOG('Client', 'try to reconnect...')
@@ -335,7 +336,7 @@ class ClientThread(Thread):
 						print data
 
 			except KeyboardInterrupt:
-				return
+				break
 
 			except Exception, e:
 				LOG('Client', repr(e))
