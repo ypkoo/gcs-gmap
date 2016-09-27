@@ -256,7 +256,7 @@ class ClientThread(Thread):
 					if i_split[0] == i_split[3]:
 						neighborMac = neighborMac + i_split[0] + " "
 
-				neighborMac = neighborMac[0:-2]
+				# neighborMac = neighborMac[0:-2]
 					
 				try:
 					print ' 	trying to recv'
