@@ -197,7 +197,6 @@ class ClientThread(Thread):
 			except Exception, e:
 				LOG('Client', repr(e))
 				LOG('Client', 'try to reconnect...')
-				self.connect()
 
 			sleep(1)
 
@@ -233,7 +232,6 @@ class ClientThread(Thread):
 				except Exception, e:
 					LOG('Client', repr(e))
 					LOG('Client', 'try to reconnect...')
-					self.connect()
 
 				sleep(1)
 				
@@ -261,7 +259,6 @@ class ClientThread(Thread):
 						except Exception, e:
 							LOG('Client', repr(e))
 							LOG('Client', 'try to reconnect...')
-							self.connect()
 
 						sleep(1)
 					continue
@@ -338,7 +335,6 @@ class ClientThread(Thread):
 					except Exception, e:
 						LOG('Client', repr(e))
 						LOG('Client', 'try to reconnect...')
-						self.connect()
 
 					sleep(1)
 
