@@ -203,6 +203,9 @@ class ClientThread(Thread):
 
 
 	def connect(self):
+		if self.socket:
+			self.socket.close()
+		global ADDR
 		LOG('Client', 'create socket')
 		self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		LOG('Client', 'try to access to server')
