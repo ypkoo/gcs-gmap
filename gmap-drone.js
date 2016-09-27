@@ -96,7 +96,7 @@ function update_marker(id, lat, lng) {
 		gcsPos = gcsMarker.getPosition()
 
 		if (gcsMarker.getMap() != null) {
-			dist = google.maps.geometry.spherical.computeDistanceBetween ({lat: lat1, lng: lng1}, {lat: lat2, lng: lng2});
+			dist = google.maps.geometry.spherical.computeDistanceBetween (markerPos, gcsPos);
 		}
 		else {
 			dist = "no_gcs_position";
