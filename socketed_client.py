@@ -56,8 +56,8 @@ class M100Thread(Thread):
 
 		self.drone = DJIDrone()
 		#while self.drone.sdk_permission_opened == False:
-		self.drone.request_sdk_permission_control()
-		time.sleep(0.5)
+		#self.drone.request_sdk_permission_control()
+		#time.sleep(0.5)
 
 		curX = self.drone.global_position.latitude
 		curY = self.drone.global_position.longitude
