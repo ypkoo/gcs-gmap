@@ -209,7 +209,7 @@ class ClientThread(Thread):
 				self.socket.connect(ADDR)
 				break
 			except KeyboardInterrupt:
-				break
+				sys.exit()
 			except Exception, e:
 				LOG('Client', repr(e))
 				LOG('Client', 'try to reconnect...')
@@ -242,7 +242,7 @@ class ClientThread(Thread):
 		try:
 			self.socket.send('drone new %s\t' %(selfMac))
 		except KeyboardInterrupt:
-				return
+				sys.exit()
 		except Exception, e:
 			LOG('Client', repr(e))
 			self.connect()
@@ -263,10 +263,9 @@ class ClientThread(Thread):
 				neighborMac = neighborMac.rstrip()
 					
 				try:
-					print ' 	trying to recv'
 					data = self.socket.recv(BUFSIZE)
 				except KeyboardInterrupt:
-					return
+					sys.exit()
 
 				if not data:
 					LOG('Client', 'the end of connection')
@@ -292,7 +291,7 @@ class ClientThread(Thread):
 						try:
 							self.socket.send(report + '\t')
 						except KeyboardInterrupt:
-							return
+							sys.exit()
 						except Exception, e:
 							LOG('Client', repr(e))
 							self.socket.shutdown(socket.SHUT_RDWR)
@@ -340,7 +339,7 @@ class ClientThread(Thread):
 						print data
 
 			except KeyboardInterrupt:
-				break
+				sys.exit()
 
 			except Exception, e:
 				LOG('Client', repr(e))
