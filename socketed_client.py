@@ -24,6 +24,7 @@ landingFlag = False
 gohomeFlag = False
 
 KEEP_CONNECT = True
+TIMEOUT = 5
 
 statusLock = threading.Lock()
 launchLock = threading.Lock()
@@ -184,19 +185,16 @@ class ClientThread(Thread):
 
 	def connect(self):
 		if self.socket:
-			# self.socket.shutdown(socket.SHUT_RDWR)
 			self.socket.close()
 		while KEEP_CONNECT:
 			sleep(1)
 			try:
 				LOG('Client', 'create socket')
 				self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-				self.socket.settimeout(5)
+				self.socket.settimeout(TIMEOUT)
 				LOG('Client', 'try to access to server')
 				self.socket.connect(ADDR)
 				break
-			except KeyboardInterrupt:
-				sys.exit()
 			except Exception, e:
 				if e.errno == 4:
 					return
@@ -230,8 +228,6 @@ class ClientThread(Thread):
 		LOG('Client', 'send drone registration request to server')
 		try:
 			self.socket.send('drone new %s\t' %(selfMac))
-		except KeyboardInterrupt:
-				sys.exit()
 		except Exception, e:
 			if e.errno == 4:
 				return
@@ -256,7 +252,7 @@ class ClientThread(Thread):
 				try:
 					data = self.socket.recv(BUFSIZE)
 				except KeyboardInterrupt:
-					sys.exit()
+					return
 
 				if not data:
 					LOG('Client', 'the end of connection')
@@ -281,8 +277,6 @@ class ClientThread(Thread):
 						print "report: " + report
 						try:
 							self.socket.send(report + '\t')
-						except KeyboardInterrupt:
-							sys.exit()
 						except Exception, e:
 							if e.errno == 4:
 								return
@@ -330,10 +324,6 @@ class ClientThread(Thread):
 
 					else:
 						print data
-
-			except KeyboardInterrupt:
-				sys.exit()
-
 			except Exception, e:
 				if e.errno == 4:
 					return

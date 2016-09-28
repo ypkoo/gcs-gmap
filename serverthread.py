@@ -20,6 +20,7 @@ PORT    = 56789
 ADDR    = (HOST, PORT)
 BUFSIZE = 1024
 PERIOD  = 1000  # msec - send status report request to every drone periodically
+TIMEOUT = 5
 drone_list = [] # list of the connected drones
 MAC_list = [] # list of the MAC address of all drone clients
 STATUS_OUTPUT = 'select a drone\n'
@@ -89,7 +90,7 @@ class ServerThread(Thread):
 						drone.disconCount = 0
 						continue
 
-					if drone.disconCount >= 5:
+					if drone.disconCount >= TIMEOUT:
 						droneID = drone.getId()
 						LOG('Server', 'client ' + str(droneID) + ': the end of the connection')
 						
@@ -103,6 +104,9 @@ class ServerThread(Thread):
 
 						output2 = ("closed %d" % droneID)
 						self.signal.emit(output2)
+
+						connection_list.remove(sock)
+						sock.close()
 
 				for sock in read_socket:
 					# a new client
