@@ -179,20 +179,6 @@ class ClientThread(Thread):
 		self.setDaemon(True)
 		self.socket = None
 
-		# try:
-		# 	LOG('Client', 'create socket')
-		# 	self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			
-		# 	#Uncomment this if you get [Errno 98] Address already in use
-		# 	#self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-			
-		# 	LOG('Client', 'try to access to server')
-		# 	self.socket.connect(ADDR)
-
-		# except Exception, e:
-		# 	LOG('Client', repr(e))
-		# 	return
-
 		self.connect()		
 		self.run()
 
@@ -205,6 +191,7 @@ class ClientThread(Thread):
 			try:
 				LOG('Client', 'create socket')
 				self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+				self.socket.settimeout(5)
 				LOG('Client', 'try to access to server')
 				self.socket.connect(ADDR)
 				break

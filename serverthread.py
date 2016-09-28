@@ -22,7 +22,6 @@ BUFSIZE = 1024
 PERIOD  = 1000  # msec - send status report request to every drone periodically
 drone_list = [] # list of the connected drones
 MAC_list = [] # list of the MAC address of all drone clients
-selected_drone = []
 STATUS_OUTPUT = 'select a drone\n'
 droneSize = 30
 
@@ -42,6 +41,13 @@ def drone_by_id(id_):
 			return drone
 
 	return None
+
+def drone_by_sock(sock):
+	for drone in drone_list:
+		if drone.getSocket() == sock:
+			return drone
+
+	return None 
 
 ''' Server thread class ----------------------------------------------------'''
 
@@ -70,11 +76,39 @@ class ServerThread(Thread):
 			while True:
 				read_socket, write_socket, error_socket = select.select(connection_list, [], [], 10)
 
+				for sock in connection_list:
+
+					drone = drone_by_sock(sock)
+					if drone == None:
+						continue
+
+					print "		disconCount: %s" % drone.disconCount
+					if sock not in read_socket:
+						drone.disconCount = drone.disconCount + 1
+					else:
+						drone.disconCount = 0
+						continue
+
+					if drone.disconCount >= 5:
+						droneID = drone.getId()
+						LOG('Server', 'client ' + str(droneID) + ': the end of the connection')
+						
+						drone_list.remove(drone)
+
+						drone.__del__()
+
+						output = ('Drone %d: connection closed' % droneID)
+						LOG('Server', output)
+						self.signal.emit(output)
+
+						output2 = ("closed %d" % droneID)
+						self.signal.emit(output2)
+
 				for sock in read_socket:
 					# a new client
 					if sock == self.socket:
 						client, addr = self.socket.accept()
-						client.settimeout(10)
+						# client.settimeout(10)
 						connection_list.append(client)
 						idx = connection_list.index(client) - 1
 						LOG('Server', 'a new client ' + str(idx) + ' is connected')
@@ -131,8 +165,6 @@ class ServerThread(Thread):
 									continue
 								droneID = drone_in_list.getId()
 								drone_list.remove(drone_in_list)
-								if drone_in_list in selected_drone:
-									selected_drone.remove(drone_in_list)
 
 								drone_in_list.__del__()
 
@@ -350,6 +382,7 @@ class Drone:
 		self.location = (0., 0., 0.)
 		self.mac = ''
 		self.neighborList = []
+		self.disconCount = 0
 				
 	def getId(self):
 		return self.id
@@ -433,7 +466,7 @@ class CmdLayout(QVBoxLayout):
 
 	def update_drone_list(self, msg_):
 
-		print "dron update msg: " + str(msg_)
+		print "drone update msg: " + str(msg_)
 
 		msg = str(msg_).split()
 

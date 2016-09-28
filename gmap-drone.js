@@ -86,10 +86,10 @@ function update_marker(id, lat, lng) {
 	// new drone
 	var marker = new google.maps.Marker({
 		position: {lat: lat, lng: lng},
-		// icon: 'http://maps.google.com/mapfiles/ms/icons/red-dot.png',
-		map: map,
-		label: id
+		label: id + "a",
+		map: map
 	});
+
 
 
 	marker.addListener('click', function() {
@@ -120,7 +120,7 @@ function remove_marker(id) {
 	for(var i=0; i<idx; i++) {
 		if (id == droneList[i].id) {
 			droneList[i].marker.setMap(null);
-			droneList[i] = null;
+			droneList[i].id = -1;
 			break;
 		}
 	}
