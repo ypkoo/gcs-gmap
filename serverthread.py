@@ -16,6 +16,8 @@ import sys
 ''' Global variables -------------------------------------------------------'''
 
 HOST    = '10.10.0.111'
+GCSMAC  = '3c:a3:15:02:6f:ec'
+gcs_pos = None
 PORT    = 56789
 ADDR    = (HOST, PORT)
 BUFSIZE = 1024
@@ -621,6 +623,7 @@ class DroneStatusLayout(QVBoxLayout):
 		self.statusTextbox.setReadOnly(True)
 		self.addWidget(self.statusLabel)
 		self.addWidget(self.statusTextbox, 2)
+		self.selectedDrone = None
 
 	def update_coordinate(self, msg):
 		self.coordinateTextbox.setText(msg)
@@ -647,6 +650,7 @@ class DroneStatusLayout(QVBoxLayout):
 
 
 		if drone != None:
+			self.selectedDrone = droneID
 			location = drone.getLocation()
 			infoString = """id: %s
 
@@ -691,14 +695,14 @@ class GMapWebView(QWebView):
 		self.frame.addToJavaScriptWindowObject('jsCommunicator', self.jsCommunicator)
 
 	def update_gmap(self):
-		global drone_list
+		global drone_list, gcs_pos
 		LOG('GUI', 'update gmap')
 
+		self.remove_all_lines()
 		for drone in drone_list:
 			droneID = drone.getId()
 			location = drone.getLocation()
-			infoString = self.build_info_string(drone)
-			self.update_marker(droneID, location, str(infoString))
+			self.update_marker(droneID, location)
 
 		for drone in drone_list:
 			self.remove_all_lines()
@@ -708,10 +712,12 @@ class GMapWebView(QWebView):
 
 				if nbrDrone != None:
 					self.draw_line(drone.getLocation(), nbrDrone.getLocation())
-				else:
-					pass
+				
+				if neighbor == GCSMAC and gcs_pos != None:
+					self.draw_line(drone.getLocation(), gcs_pos)
 
-	def update_marker(self, droneID, location, infoString):
+
+	def update_marker(self, droneID, location):
 		self.frame.evaluateJavaScript('update_marker(%s, %s, %s);' % (str(droneID), location[0], location[1]))
 
 	def remove_marker(self, droneID):
@@ -726,22 +732,10 @@ class GMapWebView(QWebView):
 	def remove_all_lines(self):
 		self.frame.evaluateJavaScript('remove_all_lines();')
 
-	def build_info_string(self, drone):
-		ret = ""
-
-		for neighborMac in drone.neighborList:
-			neighbor = drone_by_mac(neighborMac)
-			if neighbor != None:
-				ret = ret + str(neighbor.getId())
-
-		if ret == "":
-			ret = "No neighbor"
-
-		return ret
-
 	def mark_gcs_position(self, lat, lng):
+		global gcs_pos
+		gcs_pos = (lat, lng)
 		self.frame.evaluateJavaScript('mark_gcs_position(%s, %s)' % (lat, lng))
-		print lat, lng
 
 
 class MainFrame(QWidget):
