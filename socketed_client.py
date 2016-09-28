@@ -211,6 +211,8 @@ class ClientThread(Thread):
 			except KeyboardInterrupt:
 				sys.exit()
 			except Exception, e:
+				if e.errno == 4:
+					return
 				LOG('Client', repr(e))
 				LOG('Client', 'try to reconnect...')
 			
@@ -244,6 +246,8 @@ class ClientThread(Thread):
 		except KeyboardInterrupt:
 				sys.exit()
 		except Exception, e:
+			if e.errno == 4:
+				return
 			LOG('Client', repr(e))
 			self.connect()
 		
@@ -293,6 +297,8 @@ class ClientThread(Thread):
 						except KeyboardInterrupt:
 							sys.exit()
 						except Exception, e:
+							if e.errno == 4:
+								return
 							LOG('Client', repr(e))
 							self.socket.shutdown(socket.SHUT_RDWR)
 							self.socket.close()
@@ -342,6 +348,8 @@ class ClientThread(Thread):
 				sys.exit()
 
 			except Exception, e:
+				if e.errno == 4:
+					return
 				LOG('Client', repr(e))
 				self.connect()
 				self.register()
