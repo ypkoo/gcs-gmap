@@ -61,7 +61,7 @@ class M100Thread(Thread):
 
 		curX = self.drone.global_position.latitude
 		curY = self.drone.global_position.longitude
-		curZ = self.drone.global_position.altitude
+		curZ = self.drone.local_position.z
 
 	def run(self):
 		global curX, curY, curZ, dstX, dstY, dstZ
@@ -73,11 +73,13 @@ class M100Thread(Thread):
 				statusLock.acquire()
 				curX = self.drone.global_position.latitude
 				curY = self.drone.global_position.longitude
-				curZ = self.drone.global_position.altitude
+				curZ = self.drone.local_position.z
 				statusLock.release()
 
 				launchLock.acquire()
+
 				if launchFlag:
+					self.drone.request_sdk_permission_control()
 					if self.drone.flight_status.data == 1:
 						self.drone.takeoff()
 					launchFlag = False
@@ -88,7 +90,7 @@ class M100Thread(Thread):
 					# call some function for moving the drone
 					# "some function" not yet defined
 					# self.drone.global_position_control(dstX, dstY, dstZ, 0)
-					
+					self.drone.request_sdk_permission_control()
 					waypoint_task = dji_sdk.msg.MissionWaypointTask()
 					waypoint1 = dji_sdk.msg.MissionWaypoint()
 					waypoint2 = dji_sdk.msg.MissionWaypoint()
@@ -139,6 +141,7 @@ class M100Thread(Thread):
 
 				landingLock.acquire()
 				if landingFlag:
+					self.drone.request_sdk_permission_control()
 					if self.drone.flight_status.data == 3:
 						self.drone.landing()
 					landingFlag = False
