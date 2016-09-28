@@ -79,6 +79,7 @@ class M100Thread(Thread):
 				launchLock.acquire()
 
 				if launchFlag:
+                                        print '        launch pass'
 					self.drone.request_sdk_permission_control()
 					if self.drone.flight_status.data == 1:
 						self.drone.takeoff()
@@ -172,8 +173,6 @@ class M100Thread(Thread):
 
 class ClientThread(Thread):
 	def __init__(self):
-		global curX, curY, curZ, dstX, dstY, dstZ
-		global launchFlag, relocationFlag, landingFlag
 
 		Thread.__init__(self)
 
@@ -230,6 +229,8 @@ class ClientThread(Thread):
 
 	def run(self):
 
+		global curX, curY, curZ, dstX, dstY, dstZ
+		global launchFlag, relocationFlag, landingFlag, gohomeFlag
 		batctlOut = subprocess.Popen(["sudo batctl o"], stdout=subprocess.PIPE, shell=True).communicate()[0]
 		grepOut = subprocess.Popen(["grep '(bat0'"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=True).communicate(input=batctlOut)[0]
 		selfMac = subprocess.Popen(["awk '{print $5}'"], stdout=subprocess.PIPE, stdin=subprocess.PIPE, shell=True).communicate(input=grepOut)[0]
