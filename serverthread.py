@@ -16,7 +16,7 @@ import sys
 ''' Global variables -------------------------------------------------------'''
 
 HOST    = '10.10.0.111'
-GCSMAC  = '3c:a3:15:02:6f:ec'
+GCSMAC  = '3c:a3:15:02:6f:fc'
 gcs_pos = None
 PORT    = 56789
 ADDR    = (HOST, PORT)
@@ -85,7 +85,7 @@ class ServerThread(Thread):
 					if drone == None:
 						continue
 
-					print "		disconCount: %s" % drone.disconCount
+					# print "		disconCount: %s" % drone.disconCount
 					if sock not in read_socket:
 						drone.disconCount = drone.disconCount + 1
 					else:
@@ -204,7 +204,7 @@ class ServerThread(Thread):
 		self.socket.close()
 
 	def guiTimerHandler(self):
-		LOG('Server', 'timer message - update drone status')
+		# LOG('Server', 'timer message - update drone status')
 
 		if drone_list:
 			for drone_in_list in drone_list[:]:
@@ -218,8 +218,8 @@ class ServerThread(Thread):
 					drone_list.remove(drone_in_list)
 					drone_in_list.__del__()
 			output = 'broadcast status report request to every drone'
-			LOG('Server', output)
-			self.signal.emit(output)
+			# LOG('Server', output)
+			# self.signal.emit(output)
 
 	def guiLaunchHandler(self, msg):
 		LOG('Server', 'Launch message')
@@ -378,8 +378,8 @@ class ServerThread(Thread):
 			output = ('Drone %d (%s, %s, %s) has %d neighbor' % (droneID, msg[2], msg[3], msg[4], len(drone_in_list.neighborList)))
 		else:
 			output = ('Drone %d (%s, %s, %s) has %d neighbors' % (droneID, msg[2], msg[3], msg[4], len(drone_in_list.neighborList)))
-		LOG('Server', output)
-		self.signal.emit(output)
+		# LOG('Server', output)
+		# self.signal.emit(output)
 
 class Drone:
 	def __init__(self, socket = -1, id = -1):
@@ -704,17 +704,17 @@ class GMapWebView(QWebView):
 			location = drone.getLocation()
 			self.update_marker(droneID, location)
 
-		for drone in drone_list:
-			self.remove_all_lines()
+		# for drone in drone_list:
+		# 	self.remove_all_lines()
 
-			for neighbor in drone.neighborList:
-				nbrDrone = drone_by_mac(neighbor)
+		# 	for neighbor in drone.neighborList:
+		# 		nbrDrone = drone_by_mac(neighbor)
 
-				if nbrDrone != None:
-					self.draw_line(drone.getLocation(), nbrDrone.getLocation())
+		# 		if nbrDrone != None:
+		# 			self.draw_line(drone.getLocation(), nbrDrone.getLocation())
 				
-				if neighbor == GCSMAC and gcs_pos != None:
-					self.draw_line(drone.getLocation(), gcs_pos)
+		# 		if neighbor == GCSMAC and gcs_pos != None:
+		# 			self.draw_line(drone.getLocation(), gcs_pos)
 
 
 	def update_marker(self, droneID, location):
@@ -750,7 +750,7 @@ class MainFrame(QWidget):
 		self.jsSignal.connect(self.js_signal_handler)
 
 		# a socket to send message from GUI frame to the socket server
-		self.setWindowTitle('Ground Control Station')
+		self.setWindowTitle('LANADA KAIST Ground Control Station')
 		self.guiClient = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 		self.grid = QGridLayout()
